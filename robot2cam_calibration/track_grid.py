@@ -25,8 +25,8 @@ SOFTWARE.
 """
 
 import cv2
-import flycapture2 as fc2
 import numpy as np
+import camera
 import json
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -41,25 +41,21 @@ class GridLocation(object):
             grid being tracked.
         cols: An int describing the number of columns of interior corners on the
             grid being tracked.
-        intrinsic: A numpy array of the camera intrinsic matrix
-        distortion: A numpy array of the camera distortion paramaters
         opencv_windows_open: A boolean, whether the openCV display windows are
             open
-        raw_image: numpy.ndarray of the input image
-        undistort_image: numpy.ndarray of the undistorted image
+        image: numpy.ndarray of the undistorted image
         result_image: numpy.ndarray of the final image, which is undistorted,
             has grid corners drawn on it, and has the grid coordinates drawn on
             it.
-        context: flycapture2.Context of the camera context
-        fc2_image: flycapture2.Image which represents the image buffer of the
-            camera images
         object_point: numpy.ndarray of the real world coordinates of the grid in
             the grid's own coordinate system.
         axis: numpy.ndarry of the axis line points to draw, relative to the grid
             origin in the grid's coordinate system.
+        intrinsic: A numpy array of the camera intrinsic matrix
+        distortion: A numpy array of the camera distortion parameters
     """
 
-    def __init__(self, calibration, rows, cols, space):
+    def __init__(self, calibration, rows, cols, space, cam_name):
         """Initialize the GridLocation class.
 
         Reads in camera calibration info, sets up communications with the
@@ -86,35 +82,10 @@ class GridLocation(object):
         self.rows = rows
         self.cols = cols
 
-        # Calibration Data setup:
-        with open(calibration, 'r') as calib:
-            calib_dict = json.load(calib)
-        self.intrinsic = np.asarray(calib_dict['intrinsic'])
-        self.distortion = np.asarray(calib_dict['distortion'])
-
         self.opencv_windows_open = False
 
-        self.raw_image = None
-        self.undistort_image = None
+        self.image = None
         self.result_image = None
-
-        # FlyCapture Info printing and setup:
-        print "\n\nlibrary version: {}\n".format(fc2.get_library_version())
-        self.context = fc2.Context()
-        print "Number of Cameras: {}\n".format(
-            self.context.get_num_of_cameras())
-        self.context.connect(*self.context.get_camera_from_index(0))
-        print "Camera Info: {}\n".format(self.context.get_camera_info())
-        m, f = self.context.get_video_mode_and_frame_rate()
-        print "Video Mode: {}\nFrame Rate:{}\n".format(m, f)
-        print "Frame Rate Property Info: {}\n".format(
-            self.context.get_property_info(fc2.FRAME_RATE))
-        p = self.context.get_property(fc2.FRAME_RATE)
-        print "Frame Rate Property: {}\n".format(p)
-        self.context.set_property(**p)
-        self.context.start_capture()
-        self.fc2_image = fc2.Image()
-        print "done with flycap2 setup"
 
         # Grid Info:
         self.object_point = np.zeros((self.cols * self.rows, 3), np.float32)
@@ -124,6 +95,15 @@ class GridLocation(object):
                                     .T.reshape(-1, 2))
         self.axis = np.float32([[3*self.space, 0, 0], [0, 3*self.space, 0],
                                 [0, 0, -3*self.space]]).reshape(-1, 3)
+
+        # Calibration Data setup:
+        with open(calibration, 'r') as calibration_file:
+            calibration_dictionary = json.load(calibration_file)
+        self.intrinsic = np.asarray(calibration_dictionary['intrinsic'])
+        self.distortion = np.asarray(calibration_dictionary['distortion'])
+
+        # Camera
+        self.cam = camera.Camera(cam_name, self.intrinsic, self.distortion)
         print "done with init"
 
     def __del__(self):
@@ -133,23 +113,6 @@ class GridLocation(object):
         camera.
         """
         cv2.destroyAllWindows()
-        self.context.stop_capture()
-        self.context.disconnect()
-
-    def capture_image(self):
-        """Capture an image
-
-        Captures and image from a flycapture 2 device and undistorts it.
-
-        Raises:
-            RuntimeError: It was not possible to capture and undistort an image
-        """
-        self.undistort_image = None
-        self.raw_image = np.array(self.context.retrieve_buffer(self.fc2_image))
-        self.undistort_image = cv2.undistort(self.raw_image, self.intrinsic,
-                                             self.distortion)
-        if self.undistort_image is None:
-            raise RuntimeError("Unable to capture and undistort image")
 
     def show_images(self):
         """Displays the images.
@@ -159,12 +122,9 @@ class GridLocation(object):
         """
         # OpenCV window and image setup:
         if not self.opencv_windows_open:
-            cv2.namedWindow('raw', cv2.WINDOW_NORMAL)
             cv2.namedWindow('result', cv2.WINDOW_NORMAL)
             self.opencv_windows_open = True
             cv2.waitKey(1)
-        if self.raw_image is not None:
-            cv2.imshow('raw', self.raw_image)
         if self.result_image is not None:
             cv2.imshow('result', self.result_image)
         cv2.waitKey(5)
@@ -181,15 +141,18 @@ class GridLocation(object):
         Raises:
             RuntimeError: Could not find a grid
         """
+        # Get new image
+        self.image = self.cam.capture_image()
+
         # Find chessboard corners. 9: cv2.CALIB_CB_FAST_CHECK +
         # cv2.CV_CALIB_CB_ADAPTIVE_THRESH
         re_projection_error, corners = cv2.findChessboardCorners(
-            self.undistort_image, (self. rows, self.cols), 9)
+            self.image, (self. rows, self.cols), 9)
 
         if not re_projection_error:
             raise RuntimeError('unable to find grid')
 
-        corners2 = cv2.cornerSubPix(self.undistort_image, corners, (11, 11),
+        corners2 = cv2.cornerSubPix(self.image, corners, (11, 11),
                                     (-1, -1),
                                     criteria)
         if corners2 is None:
@@ -205,7 +168,7 @@ class GridLocation(object):
                                               self.intrinsic,
                                               self.distortion)
 
-        self.result_image = cv2.cvtColor(self.undistort_image,
+        self.result_image = cv2.cvtColor(self.image,
                                          cv2.COLOR_GRAY2RGB)
 
         temp_image = cv2.drawChessboardCorners(self.result_image,
