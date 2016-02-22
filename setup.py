@@ -30,7 +30,7 @@ setup(name='robot2cam_calibration',
           'numpy',
           'cv2',
           'flycapture2',
-          'ur_cb2.receive'
+          'ur_cb2'
       ],
       include_package_data=True,
       entry_points={
