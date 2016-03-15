@@ -1,0 +1,274 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage[margin=1in,nohead,nofoot]{geometry}
+\usepackage{wrapfig}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep}
+\usepackage{hyperref}
+\hypersetup{linkbordercolor=blue}
+\usepackage{sidecap}
+\usepackage{cite}
+\usepackage{setspace}
+\usepackage[backgroundcolor = blue!0,bordercolor = red]{todonotes}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+
+\usepackage{fancyhdr}
+\setlength{\headheight}{60pt}
+\setlength{\topmargin}{-50pt}
+\setlength{\headsep}{10pt}
+\pagestyle{fancy}
+\rhead{\textit{Robot to Camera Calibration}}
+\lhead{} 
+\chead{} 
+\lfoot{March 3, 2016} 
+\cfoot{\thepage} 
+\rfoot{Georgia Tech - Michael Sobrepera} 
+\renewcommand{\headrulewidth}{0.1pt} 
+\renewcommand{\footrulewidth}{0.1pt}
+
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage{subcaption}
+
+
+
+\setlength{\footskip}{20pt}
+
+%Eat whitespace
+\singlespacing
+\usepackage[subtle]{savetrees} 
+
+\begin{document}
+	
+	\section{Motivation}
+	When using a robot and a fixed camera together it is often necessary to calibrate the camera's coordinate frame to that of the robot base. This allows what is seen in the camera to be turned into meaningful commands for the robot. 
+	
+	In order to do this, I propose to use a single grid, arbitrarily mounted to the robot, past its final degree of freedom. By moving the grid to a number of different positions and capturing those positions kinematically from the robot and visually from the camera. This will generate a series of equations which can then be solved to determine the transformation from the camera to the robot. 
+	
+	\section{Setup}
+	In order to perform this procedure, the robot and camera should be fixed, with the camera viewing the robot. A checkerboard grid should be attached to the robot past the final joint, it is easiest to attach the grid to the tool flange. The grid should be asymmetrical and should have a white border. 
+	
+	\section{Math}
+	The center of this problem is finding a transformation given a set of parallel transformations and many sample points. This can be seen in \autoref{fig:transformations}
+	
+	\begin{figure}
+		\centering
+		\def\svgwidth{\textwidth}
+		\input{transformatin_diagram.pdf_tex}
+		\caption{\textbf{Transformations}. The transformation $C$ can be measured by tracking the grid, so long as the camera intrinsics are well calibrated. The transformation $G$ is unknown, however, it does not change as the grid is rigidly attached to the tool center point (TCP). The transformation $T$ can be gathered directly from the robots forward kinematics. The goal is to solve for the transformation $R$, which is unknown, but constant.}
+		\label{fig:transformations}
+	\end{figure}
+	
+	Given \autoref{fig:transformations} we can develop some math using dual quaternions to solve for $R$ given a number of matches pairs samples of $T$ and $C$. 
+	
+	First we re-define $T$ a more useful version of $T$
+	\begin{equation}
+	T = T^*
+	\end{equation}
+	
+	We then define the transformation from the camera to the TCP using dual quaternions where given dual quaternion $q$ the dual quaternion can be decomposed into quaternions $q_r +  q_d$ which can be further decomposed to individual elements $q_{r_w} + q_{r_x} i + q_{r_y} j + q_{r_z} k + (q_{d_w} + q_{d_x} i + q_{d_y} j + q_{d_z} k)\epsilon$.
+	
+	We can now describe, in steps, the transformation from the camera to the UR Base. We begin by defining the transformation from the Camera to the Grid:
+	\begin{equation}
+		C_r G_r+(C_r G_d + C_d G_r)\epsilon
+	\end{equation}
+	We then extend this from the camera to the UR Base, which is equivalent to $R$:
+	\begin{equation}
+		R = C_r G_r T_r + (C_r G_r T_d + (C_r G_d + C_d G_r)T_r)\epsilon
+	\end{equation}
+	We then proceed to expand this into individual units and standard math:
+
+	\begin{equation}
+		\begin{split}
+			R_{r_w} = \\&
+			(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_w}+\\&(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_x}+\\&(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_y}+\\&(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_z}
+		\end{split}
+		\label{eq:rrw}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{r_x} = \\&
+			(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_w}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_x}+\\&(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_y}-\\&(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{r_y} = \\&
+			(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_w}-\\&(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_x}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_y}+\\&(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{r_z} = \\&
+			(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_w}+\\&(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_x}-\\&(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_y}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{d_w} = \\&
+			(C_{r_w} G_{r_w} - C_{r_x} G_{r_x} - C_{r_y} G_{r_y} - 
+			C_{r_z} G_{r_z}) T_{d_w} +\\& (C_{r_x} G_{r_w} + 
+			C_{r_w} G_{r_x} - C_{r_z} G_{r_y} + 
+			C_{r_y} G_{r_z}) T_{d_x} + \\&(C_{r_y} G_{r_w} + 
+			C_{r_z} G_{r_x} + C_{r_w} G_{r_y} - 
+			C_{r_x} G_{r_z}) T_{d_y} +\\& (C_{r_z} G_{r_w} - 
+			C_{r_y} G_{r_x} + C_{r_x} G_{r_y} + 
+			C_{r_w} G_{r_z}) T_{d_z} +\\& (C_{r_w} G_{d_w} - 
+			C_{r_x} G_{d_x} - C_{r_y} G_{d_y} - C_{r_z} G_{d_z} + 
+			C_{d_w} G_{r_w} - C_{d_x} G_{r_x} - C_{d_y} G_{r_y} - 
+			C_{d_z} G_{r_z}) T_{r_w} -\\& (C_{r_x} G_{d_w} + 
+			C_{r_w} G_{d_x} - C_{r_z} G_{d_y} + C_{r_y} G_{d_z} + 
+			C_{d_x} G_{r_w} + C_{d_w} G_{r_x} - C_{d_z} G_{r_y} + 
+			C_{d_y} G_{r_z}) T_{r_x} -\\& (C_{r_y} G_{d_w} + 
+			C_{r_z} G_{d_x} + C_{r_w} G_{d_y} - C_{r_x} G_{d_z} + 
+			C_{d_y} G_{r_w} + C_{d_z} G_{r_x} + C_{d_w} G_{r_y} - 
+			C_{d_x} G_{r_z}) T_{r_y} - \\&(C_{r_z} G_{d_w} - 
+			C_{r_y} G_{d_x} + C_{r_x} G_{d_y} + C_{r_w} G_{d_z} + 
+			C_{d_z} G_{r_w} - C_{d_y} G_{r_x} + C_{d_x} G_{r_y} + 
+			C_{d_w} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{d_x} = \\&
+			(C_{r_x} G_{r_w} + 
+			C_{r_w} G_{r_x} - C_{r_z} G_{r_y} + 
+			C_{r_y} G_{r_z}) T_{d_w} -\\& (C_{r_w} G_{r_w} - 
+			C_{r_x} G_{r_x} - C_{r_y} G_{r_y} - 
+			C_{r_z} G_{r_z}) T_{d_x} +\\& (C_{r_z} G_{r_w} - 
+			C_{r_y} G_{r_x} + C_{r_x} G_{r_y} + 
+			C_{r_w} G_{r_z}) T_{d_y} - \\&(C_{r_y} G_{r_w} + 
+			C_{r_z} G_{r_x} + C_{r_w} G_{r_y} - 
+			C_{r_x} G_{r_z}) T_{d_z} +\\& (C_{r_x} G_{d_w} + 
+			C_{r_w} G_{d_x} - C_{r_z} G_{d_y} + C_{r_y} G_{d_z} + 
+			C_{d_x} G_{r_w} + C_{d_w} G_{r_x} - C_{d_z} G_{r_y} + 
+			C_{d_y} G_{r_z}) T_{r_w} + \\&(C_{r_w} G_{d_w} - 
+			C_{r_x} G_{d_x} - C_{r_y} G_{d_y} - C_{r_z} G_{d_z} + 
+			C_{d_w} G_{r_w} - C_{d_x} G_{r_x} - C_{d_y} G_{r_y} - 
+			C_{d_z} G_{r_z}) T_{r_x} - \\&(C_{r_z} G_{d_w} - 
+			C_{r_y} G_{d_x} + C_{r_x} G_{d_y} + C_{r_w} G_{d_z} + 
+			C_{d_z} G_{r_w} - C_{d_y} G_{r_x} + C_{d_x} G_{r_y} + 
+			C_{d_w} G_{r_z}) T_{r_y} + \\&(C_{r_y} G_{d_w} + 
+			C_{r_z} G_{d_x} + C_{r_w} G_{d_y} - C_{r_x} G_{d_z} + 
+			C_{d_y} G_{r_w} + C_{d_z} G_{r_x} + C_{d_w} G_{r_y} - 
+			C_{d_x} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{d_y} = \\&
+			(C_{r_y} G_{r_w} + 
+			C_{r_z} G_{r_x} + C_{r_w} G_{r_y} - 
+			C_{r_x} G_{r_z}) T_{d_w} -\\& (C_{r_z} G_{r_w} - 
+			C_{r_y} G_{r_x} + C_{r_x} G_{r_y} + 
+			C_{r_w} G_{r_z}) T_{d_x} -\\& (C_{r_w} G_{r_w} - 
+			C_{r_x} G_{r_x} - C_{r_y} G_{r_y} - 
+			C_{r_z} G_{r_z}) T_{d_y} +\\& (C_{r_x} G_{r_w} + 
+			C_{r_w} G_{r_x} - C_{r_z} G_{r_y} + 
+			C_{r_y} G_{r_z}) T_{d_z} + \\&(C_{r_y} G_{d_w} + 
+			C_{r_z} G_{d_x} + C_{r_w} G_{d_y} - C_{r_x} G_{d_z} + 
+			C_{d_y} G_{r_w} + C_{d_z} G_{r_x} + C_{d_w} G_{r_y} - 
+			C_{d_x} G_{r_z}) T_{r_w} +\\& (C_{r_z} G_{d_w} - 
+			C_{r_y} G_{d_x} + C_{r_x} G_{d_y} + C_{r_w} G_{d_z} + 
+			C_{d_z} G_{r_w} - C_{d_y} G_{r_x} + C_{d_x} G_{r_y} + 
+			C_{d_w} G_{r_z}) T_{r_x} +\\& (C_{r_w} G_{d_w} - 
+			C_{r_x} G_{d_x} - C_{r_y} G_{d_y} - C_{r_z} G_{d_z} + 
+			C_{d_w} G_{r_w} - C_{d_x} G_{r_x} - C_{d_y} G_{r_y} - 
+			C_{d_z} G_{r_z}) T_{r_y} -\\& (C_{r_x} G_{d_w} + 
+			C_{r_w} G_{d_x} - C_{r_z} G_{d_y} + C_{r_y} G_{d_z} + 
+			C_{d_x} G_{r_w} + C_{d_w} G_{r_x} - C_{d_z} G_{r_y} + 
+			C_{d_y} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	\begin{equation}
+		\begin{split}
+			R_{d_z} = \\&
+			(C_{r_z} G_{r_w} - 
+			C_{r_y} G_{r_x} + C_{r_x} G_{r_y} + 
+			C_{r_w} G_{r_z}) T_{d_w} + \\&(C_{r_y} G_{r_w} + 
+			C_{r_z} G_{r_x} + C_{r_w} G_{r_y} - 
+			C_{r_x} G_{r_z}) T_{d_x} - \\&(C_{r_x} G_{r_w} + 
+			C_{r_w} G_{r_x} - C_{r_z} G_{r_y} + 
+			C_{r_y} G_{r_z}) T_{d_y} - \\&(C_{r_w} G_{r_w} - 
+			C_{r_x} G_{r_x} - C_{r_y} G_{r_y} - 
+			C_{r_z} G_{r_z}) T_{d_z} + \\&(C_{r_z} G_{d_w} - 
+			C_{r_y} G_{d_x} + C_{r_x} G_{d_y} + C_{r_w} G_{d_z} + 
+			C_{d_z} G_{r_w} - C_{d_y} G_{r_x} + C_{d_x} G_{r_y} + 
+			C_{d_w} G_{r_z}) T_{r_w} -\\& (C_{r_y} G_{d_w} + 
+			C_{r_z} G_{d_x} + C_{r_w} G_{d_y} - C_{r_x} G_{d_z} + 
+			C_{d_y} G_{r_w} + C_{d_z} G_{r_x} + C_{d_w} G_{r_y} - 
+			C_{d_x} G_{r_z}) T_{r_x} +\\& (C_{r_x} G_{d_w} + 
+			C_{r_w} G_{d_x} - C_{r_z} G_{d_y} + C_{r_y} G_{d_z} + 
+			C_{d_x} G_{r_w} + C_{d_w} G_{r_x} - C_{d_z} G_{r_y} + 
+			C_{d_y} G_{r_z}) T_{r_y} +\\& (C_{r_w} G_{d_w} - 
+			C_{r_x} G_{d_x} - C_{r_y} G_{d_y} - C_{r_z} G_{d_z} + 
+			C_{d_w} G_{r_w} - C_{d_x} G_{r_x} - C_{d_y} G_{r_y} - 
+			C_{d_z} G_{r_z}) T_{r_z}
+		\end{split}
+	\end{equation}
+	
+	Now somehow we can get this into an approx linear equation solver (least squares or something like that). All of the C and T terms will be filled in, we will be solving for all terms G and R. But how? We have 6 terms which put together generate one unique equation. Given enough samples, and with knowledge that $R$ and $G$ never change, this system becomes solvable, I just don't know how this gets solved. 
+	
+	Lets try to make a matrix from this with the form:
+	\begin{equation}
+		\begin{bmatrix}
+			a_{0,0} & \cdots & a_{1,15} \\
+			\vdots  & \ddots & \vdots   \\
+			a_{n,0} & \cdots & a_{n,15} 
+		\end{bmatrix}
+		\begin{bmatrix}
+			G_{r_w} \\
+			G_{r_x} \\
+			G_{r_y} \\
+			G_{r_z} \\
+			G_{d_w} \\
+			G_{d_x} \\
+			G_{d_y} \\
+			G_{d_z} \\
+			R_{r_w} \\
+			R_{r_x} \\
+			R_{r_y} \\
+			R_{r_z} \\
+			R_{d_w} \\
+			R_{d_x} \\
+			R_{d_y} \\
+			R_{d_z}
+		\end{bmatrix}
+		=
+		\begin{bmatrix}
+			0
+		\end{bmatrix}
+		\label{eq:generalMatrix}
+	\end{equation}
+	
+	Each sample will generate a set of 6 equations to add to the matrix. We group the equations by unknowns. 
+	
+	From \autoref{eq:rrw} we generate:
+	
+	\begin{equation}
+		\begin{split}
+			0=\\&
+			G_{r_w}(T_{r_w}C_{r_w}+T_{r_x}C_{r_x}+T_{r_y}C_{r_y}+T_{r_z}C_{r_z})+\\&
+			G_{r_x}(-T_{r_w}C_{r_x}+T_{r_x}C_{r_w}+T_{r_y}C_{r_z}-T_{r_z}C_{r_y})+\\&
+			G_{r_y}(-T_{r_w}C_{r_y}-T_{r_x}C_{r_z}+T_{r_y}C_{r_w}+T_{r_z}C_{r_x})+\\&
+			G_{r_z}(-T_{r_w}C_{r_z}+T_{r_x}C_{r_y}-T_{r_y}C_{r_x}+T_{r_z}C_{r_w})+\\&
+			R_{r_w}(-1)+\\&
+			R_{r_x}(0)+\\&
+			R_{r_y}(0)+\\&
+			R_{r_z}(0)+\\&
+		\end{split}
+	\end{equation}
+	Which in turn generates a row of the a matrix in \autoref{eq:generalMatrix}:
+	\begin{equation}
+		\begin{bmatrix}
+			T_{r_w}C_{r_w}+T_{r_x}C_{r_x}+T_{r_y}C_{r_y}+T_{r_z}C_{r_z} \\
+			-T_{r_w}C_{r_x}+T_{r_x}C_{r_w}+T_{r_y}C_{r_z}-T_{r_z}C_{r_y} \\
+			-T_{r_w}C_{r_y}-T_{r_x}C_{r_z}+T_{r_y}C_{r_w}+T_{r_z}C_{r_x} \\
+			-T_{r_w}C_{r_z}+T_{r_x}C_{r_y}-T_{r_y}C_{r_x}+T_{r_z}C_{r_w} \\
+			0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0
+		\end{bmatrix}^T
+	\end{equation}
+\end{document}
