@@ -1,0 +1,1150 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.4' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     41376,       1142]
+NotebookOptionsPosition[     40007,       1095]
+NotebookOutlinePosition[     40348,       1110]
+CellTagsIndexPosition[     40305,       1107]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"<<", "Quaternions`"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Creal", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Crealw", ",", "Crealx", ",", "Crealy", ",", "Crealz"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Cdual", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Cdualw", ",", "Cdualx", ",", "Cdualy", ",", "Cdualz"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Greal", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Grealw", ",", "Grealx", ",", "Grealy", ",", "Grealz"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Gdual", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Gdualw", ",", "Gdualx", ",", "Gdualy", ",", "Gdualz"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Treal", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Trealw", ",", "Trealx", ",", "Trealy", ",", "Trealz"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Tdual", "=", 
+   RowBox[{"Quaternion", "[", 
+    RowBox[{"Tdualw", ",", "Tdualx", ",", "Tdualy", ",", "Tdualz"}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.6670531092306137`*^9, 3.667053110888443*^9}, {
+   3.667056227163328*^9, 3.667056232939621*^9}, {3.66705627649133*^9, 
+   3.667056420891667*^9}, {3.667056480282708*^9, 3.667056491050302*^9}, 
+   3.667056596340469*^9, {3.667056652079526*^9, 3.667056672961883*^9}, {
+   3.6670576874457817`*^9, 3.667057690101021*^9}, {3.667057915097303*^9, 
+   3.667057952021214*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Tpreal", " ", "=", " ", 
+   RowBox[{"Conjugate", "[", "Treal", "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Tpdual", " ", "=", " ", 
+   RowBox[{"Conjugate", "[", "Tdual", "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.667058130974371*^9, 3.667058150949326*^9}, 
+   3.667059743359445*^9}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"Rreal", "=", 
+  RowBox[{"Creal", "**", "Greal", "**", "Tpreal"}]}], "\[IndentingNewLine]", 
+ RowBox[{"Rdual", " ", "=", " ", 
+  RowBox[{
+   RowBox[{"Creal", "**", "Greal", "**", "Tpdual"}], "+", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"Creal", "**", "Gdual"}], "+", 
+      RowBox[{"Cdual", "**", "Greal"}]}], ")"}], "**", 
+    "Tpreal"}]}]}]}], "Input",
+ CellChangeTimes->{{3.6670577049374933`*^9, 3.667057773452958*^9}, {
+  3.66705815607787*^9, 3.667058161069634*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Quaternion", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}]}], 
+  "]"}]], "Output",
+ CellChangeTimes->{
+  3.667057775266762*^9, {3.667057933978018*^9, 3.66705795523629*^9}, {
+   3.66705816230413*^9, 3.6670581774519253`*^9}, 3.667059748282865*^9}],
+
+Cell[BoxData[
+ RowBox[{"Quaternion", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Tdualw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Tdualx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Tdualy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Tdualz"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealy", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealz", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealx", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Tdualw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Tdualx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Tdualy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Tdualz"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealy", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealx", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealz", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Tdualw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Tdualx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Tdualy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Tdualz"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealz", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealx", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealy", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Grealw"}], "-", 
+       RowBox[{"Crealy", " ", "Grealx"}], "+", 
+       RowBox[{"Crealx", " ", "Grealy"}], "+", 
+       RowBox[{"Crealw", " ", "Grealz"}]}], ")"}], " ", "Tdualw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Grealw"}], "+", 
+       RowBox[{"Crealz", " ", "Grealx"}], "+", 
+       RowBox[{"Crealw", " ", "Grealy"}], "-", 
+       RowBox[{"Crealx", " ", "Grealz"}]}], ")"}], " ", "Tdualx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Grealw"}], "+", 
+       RowBox[{"Crealw", " ", "Grealx"}], "-", 
+       RowBox[{"Crealz", " ", "Grealy"}], "+", 
+       RowBox[{"Crealy", " ", "Grealz"}]}], ")"}], " ", "Tdualy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Grealw"}], "-", 
+       RowBox[{"Crealx", " ", "Grealx"}], "-", 
+       RowBox[{"Crealy", " ", "Grealy"}], "-", 
+       RowBox[{"Crealz", " ", "Grealz"}]}], ")"}], " ", "Tdualz"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealz", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealx", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealz"}]}], ")"}], " ", "Trealw"}], "+", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealy", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealz", " ", "Gdualx"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualz", " ", "Grealx"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealz"}]}], ")"}], " ", "Trealx"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealx", " ", "Gdualw"}], "+", 
+       RowBox[{"Crealw", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualy"}], "+", 
+       RowBox[{"Crealy", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualx", " ", "Grealw"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealy"}], "+", 
+       RowBox[{"Cdualy", " ", "Grealz"}]}], ")"}], " ", "Trealy"}], "-", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Crealw", " ", "Gdualw"}], "-", 
+       RowBox[{"Crealx", " ", "Gdualx"}], "-", 
+       RowBox[{"Crealy", " ", "Gdualy"}], "-", 
+       RowBox[{"Crealz", " ", "Gdualz"}], "+", 
+       RowBox[{"Cdualw", " ", "Grealw"}], "-", 
+       RowBox[{"Cdualx", " ", "Grealx"}], "-", 
+       RowBox[{"Cdualy", " ", "Grealy"}], "-", 
+       RowBox[{"Cdualz", " ", "Grealz"}]}], ")"}], " ", "Trealz"}]}]}], 
+  "]"}]], "Output",
+ CellChangeTimes->{
+  3.667057775266762*^9, {3.667057933978018*^9, 3.66705795523629*^9}, {
+   3.66705816230413*^9, 3.6670581774519253`*^9}, 3.667059748287314*^9}]
+}, Open  ]],
+
+Cell["Get the ", "Text",
+ CellChangeTimes->{{3.66705825090525*^9, 3.6670582943091087`*^9}, {
+  3.667058328901484*^9, 3.667058329877432*^9}, {3.6670584316054783`*^9, 
+  3.667058436549264*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"indexMap", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"w", ",", "x", ",", "y", ",", "z"}], "}"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.667059586695258*^9, 3.667059601719179*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"For", "[", 
+  RowBox[{
+   RowBox[{"i", "=", "1"}], ",", " ", 
+   RowBox[{"i", "<", "5"}], ",", 
+   RowBox[{"i", "++"}], ",", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Rreal at \>\"", 
+      RowBox[{"indexMap", "[", 
+       RowBox[{"[", "i", "]"}], "]"}]}], "]"}], 
+    RowBox[{"Print", "[", 
+     RowBox[{"Collect", "[", 
+      RowBox[{
+       RowBox[{"Rreal", "[", 
+        RowBox[{"[", "i", "]"}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{
+        "Grealw", ",", "Grealx", ",", "Grealy", ",", "Grealz", ",", "Gdualw", 
+         ",", "Gdualx", ",", "Gdualy", ",", "Gdualz", ",", "Rrealw", ",", 
+         "Rrealx", ",", "Rrealy", ",", "Rrealz", ",", "Rdualw", ",", "Rdualx",
+          ",", "Rdualy", ",", "Rdualz"}], "}"}]}], "]"}], "]"}]}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.667059447437708*^9, 3.6670595595594473`*^9}, {
+  3.6670596064476023`*^9, 3.6670596127512083`*^9}, {3.667059707136207*^9, 
+  3.667059707783321*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\<\"Rreal at \"\>", " ", "w"}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.6670597483203773`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "-", 
+     RowBox[{"Crealx", " ", "Trealy"}], "+", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Trealw"}], "-", 
+     RowBox[{"Crealz", " ", "Trealx"}], "+", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "-", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "+", 
+     RowBox[{"Crealx", " ", "Trealx"}], "+", 
+     RowBox[{"Crealy", " ", "Trealy"}], "+", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.667059748321035*^9}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rreal at \"\>", " ", "x"}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.6670597483217573`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "+", 
+     RowBox[{"Crealx", " ", "Trealy"}], "-", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Trealw"}], "+", 
+     RowBox[{"Crealz", " ", "Trealx"}], "+", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Trealw"}], "-", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "-", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "+", 
+     RowBox[{"Crealx", " ", "Trealx"}], "-", 
+     RowBox[{"Crealy", " ", "Trealy"}], "-", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.6670597483225107`*^9}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rreal at \"\>", " ", "y"}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.667059748323223*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "+", 
+     RowBox[{"Crealx", " ", "Trealy"}], "+", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Trealw"}], "-", 
+     RowBox[{"Crealz", " ", "Trealx"}], "-", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Trealw"}], "-", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "+", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "-", 
+     RowBox[{"Crealx", " ", "Trealx"}], "+", 
+     RowBox[{"Crealy", " ", "Trealy"}], "-", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.6670597483239527`*^9}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rreal at \"\>", " ", "z"}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.667059748324658*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "-", 
+     RowBox[{"Crealx", " ", "Trealy"}], "-", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealz", " ", "Trealx"}], "-", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Trealw"}], "+", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "+", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "-", 
+     RowBox[{"Crealx", " ", "Trealx"}], "-", 
+     RowBox[{"Crealy", " ", "Trealy"}], "+", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.66705951792889*^9, {3.667059560138504*^9, 3.667059581668751*^9}, 
+   3.667059624431572*^9, 3.667059708183715*^9, 3.667059748325446*^9}]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"For", "[", 
+  RowBox[{
+   RowBox[{"i", "=", "1"}], ",", " ", 
+   RowBox[{"i", "<", "5"}], ",", 
+   RowBox[{"i", "++"}], ",", 
+   RowBox[{
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Rdual at \>\"", 
+      RowBox[{"indexMap", "[", 
+       RowBox[{"[", "i", "]"}], "]"}]}], "]"}], 
+    RowBox[{"Print", "[", 
+     RowBox[{"Collect", "[", 
+      RowBox[{
+       RowBox[{"Rdual", "[", 
+        RowBox[{"[", "i", "]"}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{
+        "Grealw", ",", "Grealx", ",", "Grealy", ",", "Grealz", ",", "Gdualw", 
+         ",", "Gdualx", ",", "Gdualy", ",", "Gdualz", ",", "Rrealw", ",", 
+         "Rrealx", ",", "Rrealy", ",", "Rrealz", ",", "Rdualw", ",", "Rdualx",
+          ",", "Rdualy", ",", "Rdualz"}], "}"}]}], "]"}], "]"}]}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.667059447437708*^9, 3.6670595595594473`*^9}, {
+  3.6670596064476023`*^9, 3.6670596127512083`*^9}, {3.66705969783149*^9, 
+  3.667059710870976*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\<\"Rdual at \"\>", " ", "w"}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.6670597553198013`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Tdualw"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealx", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Tdualw"}], "-", 
+     RowBox[{"Crealz", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Tdualw"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealy", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "-", 
+     RowBox[{"Crealx", " ", "Trealy"}], "+", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Trealw"}], "-", 
+     RowBox[{"Crealz", " ", "Trealx"}], "+", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "-", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "+", 
+     RowBox[{"Crealx", " ", "Trealx"}], "+", 
+     RowBox[{"Crealy", " ", "Trealy"}], "+", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.667059755321395*^9}}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rdual at \"\>", " ", "x"}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.6670597553229017`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Tdualw"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Tdualw"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealy", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealy", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealz", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealz"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "+", 
+     RowBox[{"Crealx", " ", "Trealy"}], "-", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Trealw"}], "+", 
+     RowBox[{"Crealz", " ", "Trealx"}], "+", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Trealw"}], "-", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "-", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "+", 
+     RowBox[{"Crealx", " ", "Trealx"}], "-", 
+     RowBox[{"Crealy", " ", "Trealy"}], "-", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.667059755324231*^9}}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rdual at \"\>", " ", "y"}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.6670597553256063`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Tdualw"}], "-", 
+     RowBox[{"Crealz", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Tdualw"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Tdualw"}], "-", 
+     RowBox[{"Crealx", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealz", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualz", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "+", 
+     RowBox[{"Crealx", " ", "Trealy"}], "+", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealy", " ", "Trealw"}], "-", 
+     RowBox[{"Crealz", " ", "Trealx"}], "-", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealx"}], " ", "Trealw"}], "-", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "+", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "-", 
+     RowBox[{"Crealx", " ", "Trealx"}], "+", 
+     RowBox[{"Crealy", " ", "Trealy"}], "-", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.667059755326995*^9}}],
+
+Cell[BoxData[
+ RowBox[{"\<\"Rdual at \"\>", " ", "z"}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.667059755328349*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Grealw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealx", " ", "Tdualy"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealy"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Tdualw"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealw", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealx", " ", "Tdualz"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualw", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Tdualw"}], "+", 
+     RowBox[{"Crealw", " ", "Tdualx"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealy", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualx", " ", "Trealw"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealx"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Grealz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Tdualw"}], "-", 
+     RowBox[{"Crealx", " ", "Tdualx"}], "-", 
+     RowBox[{"Crealy", " ", "Tdualy"}], "+", 
+     RowBox[{"Crealz", " ", "Tdualz"}], "+", 
+     RowBox[{"Cdualw", " ", "Trealw"}], "-", 
+     RowBox[{"Cdualx", " ", "Trealx"}], "-", 
+     RowBox[{"Cdualy", " ", "Trealy"}], "+", 
+     RowBox[{"Cdualz", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualw", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealz", " ", "Trealw"}], "+", 
+     RowBox[{"Crealy", " ", "Trealx"}], "-", 
+     RowBox[{"Crealx", " ", "Trealy"}], "-", 
+     RowBox[{"Crealw", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualx", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "Crealy"}], " ", "Trealw"}], "+", 
+     RowBox[{"Crealz", " ", "Trealx"}], "-", 
+     RowBox[{"Crealw", " ", "Trealy"}], "+", 
+     RowBox[{"Crealx", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualy", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealx", " ", "Trealw"}], "+", 
+     RowBox[{"Crealw", " ", "Trealx"}], "+", 
+     RowBox[{"Crealz", " ", "Trealy"}], "+", 
+     RowBox[{"Crealy", " ", "Trealz"}]}], ")"}]}], "+", 
+  RowBox[{"Gdualz", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"Crealw", " ", "Trealw"}], "-", 
+     RowBox[{"Crealx", " ", "Trealx"}], "-", 
+     RowBox[{"Crealy", " ", "Trealy"}], "+", 
+     RowBox[{"Crealz", " ", "Trealz"}]}], ")"}]}]}]], "Print",
+ CellChangeTimes->{
+  3.667059711167235*^9, {3.6670597483489428`*^9, 3.667059755329715*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{927, 1028},
+WindowMargins->{{Automatic, 918}, {Automatic, -10}},
+FrontEndVersion->"10.4 for Linux x86 (64-bit) (February 25, 2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 1428, 37, 165, "Input"],
+Cell[1989, 59, 341, 8, 55, "Input"],
+Cell[CellGroupData[{
+Cell[2355, 71, 513, 13, 55, "Input"],
+Cell[2871, 86, 4529, 122, 363, "Output"],
+Cell[7403, 210, 11841, 298, 1067, "Output"]
+}, Open  ]],
+Cell[19259, 511, 191, 3, 33, "Text"],
+Cell[19453, 516, 219, 5, 32, "Input"],
+Cell[CellGroupData[{
+Cell[19697, 525, 982, 25, 77, "Input"],
+Cell[CellGroupData[{
+Cell[20704, 554, 227, 4, 23, "Print"],
+Cell[20934, 560, 1259, 35, 81, "Print"],
+Cell[22196, 597, 227, 4, 23, "Print"],
+Cell[22426, 603, 1217, 33, 81, "Print"],
+Cell[23646, 638, 225, 4, 23, "Print"],
+Cell[23874, 644, 1217, 33, 81, "Print"],
+Cell[25094, 679, 225, 4, 23, "Print"],
+Cell[25322, 685, 1215, 33, 81, "Print"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[26586, 724, 981, 25, 77, "Input"],
+Cell[CellGroupData[{
+Cell[27592, 753, 160, 3, 23, "Print"],
+Cell[27755, 758, 2998, 81, 233, "Print"],
+Cell[30756, 841, 160, 3, 23, "Print"],
+Cell[30919, 846, 2910, 77, 233, "Print"],
+Cell[33832, 925, 160, 3, 23, "Print"],
+Cell[33995, 930, 2910, 77, 233, "Print"],
+Cell[36908, 1009, 158, 3, 23, "Print"],
+Cell[37069, 1014, 2910, 77, 233, "Print"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

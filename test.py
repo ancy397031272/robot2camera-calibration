@@ -41,5 +41,5 @@ with ci.GridLocation("result.json", 7, 8, 25.4, 'flycap') as calib:
                     print "something went wrong: {}".format(e)
                     go_on += 1
 
-print np.asarray(tcp2robot)
+print np.asarray(tcp2robot) # Axis-Angle [x,y,z,ax,ay,az]
 print np.asarray(camera2grid)

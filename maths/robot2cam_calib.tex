@@ -93,18 +93,21 @@
 			R_{r_x} = \\&
 			(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_w}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_x}+\\&(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_y}-\\&(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rrx}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
 			R_{r_y} = \\&
 			(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_w}-\\&(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_x}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_y}+\\&(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rry}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
 			R_{r_z} = \\&
 			(C_{r_z} G_{r_w}-C_{r_y} G_{r_x}+C_{r_x} G_{r_y}+C_{r_w} G_{r_z}) T_{r_w}+\\&(C_{r_y} G_{r_w}+C_{r_z} G_{r_x}+C_{r_w} G_{r_y}-C_{r_x} G_{r_z}) T_{r_x}-\\&(C_{r_x} G_{r_w}+C_{r_w} G_{r_x}-C_{r_z} G_{r_y}+C_{r_y} G_{r_z}) T_{r_y}-\\&(C_{r_w} G_{r_w}-C_{r_x} G_{r_x}-C_{r_y} G_{r_y}-C_{r_z} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rrz}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
@@ -130,6 +133,7 @@
 			C_{d_z} G_{r_w} - C_{d_y} G_{r_x} + C_{d_x} G_{r_y} + 
 			C_{d_w} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rdw}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
@@ -156,6 +160,7 @@
 			C_{d_y} G_{r_w} + C_{d_z} G_{r_x} + C_{d_w} G_{r_y} - 
 			C_{d_x} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rdx}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
@@ -182,6 +187,7 @@
 			C_{d_x} G_{r_w} + C_{d_w} G_{r_x} - C_{d_z} G_{r_y} + 
 			C_{d_y} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rdy}
 	\end{equation}
 	\begin{equation}
 		\begin{split}
@@ -208,11 +214,26 @@
 			C_{d_w} G_{r_w} - C_{d_x} G_{r_x} - C_{d_y} G_{r_y} - 
 			C_{d_z} G_{r_z}) T_{r_z}
 		\end{split}
+		\label{eq:rdz}
 	\end{equation}
 	
-	Now somehow we can get this into an approx linear equation solver (least squares or something like that). All of the C and T terms will be filled in, we will be solving for all terms G and R. But how? We have 6 terms which put together generate one unique equation. Given enough samples, and with knowledge that $R$ and $G$ never change, this system becomes solvable, I just don't know how this gets solved. 
+	We have 6 terms which put together generate one unique equation set. Given enough samples, and with knowledge that $R$ and $G$ never change, this system becomes solvable. To do this, we will reformat the equations into a computationally friendly matrix form. 
 	
 	Lets try to make a matrix from this with the form:
+	\begin{equation}
+		\begin{bmatrix}
+			a
+		\end{bmatrix}
+		\begin{bmatrix}
+			coeff
+		\end{bmatrix}
+		=
+		\begin{bmatrix}
+			b
+		\end{bmatrix}
+		\label{eq:generalFormMatrix}
+	\end{equation}
+		
 	\begin{equation}
 		\begin{bmatrix}
 			a_{0,0} & \cdots & a_{1,15} \\
@@ -244,31 +265,236 @@
 		\label{eq:generalMatrix}
 	\end{equation}
 	
-	Each sample will generate a set of 6 equations to add to the matrix. We group the equations by unknowns. 
+	Each sample will generate a set of 8 equations ($R_{r_w}$, $R_{r_x}$, $R_{r_y}$, $R_{r_z}$, $R_{d_w}$, $R_{d_x}$, $R_{d_y}$, $R_{d_z}$) to add to the matrix. We group the equations by unknowns. 
 	
 	From \autoref{eq:rrw} we generate:
+	\begin{equation}
+	    \begin{split}
+	0= \\&
+	G_{r_w} (C_{r_w} T_{r_w}+C_{r_x} T_{r_x}+C_{r_y} T_{r_y}+C_{r_z} T_{r_z})+\\&
+	G_{r_x} (-C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z})+\\&
+	G_{r_y} (-C_{r_y} T_{r_w}-C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+	G_{r_z} (-C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}+C_{r_w} T_{r_z})+\\&
+	 R_{r_w}(-1)
+	\end{split}
+	\end{equation}
+	
+	Which in turn generates a row of the $a$ matrix in \autoref{eq:generalMatrix}:
 	
 	\begin{equation}
-		\begin{split}
-			0=\\&
-			G_{r_w}(T_{r_w}C_{r_w}+T_{r_x}C_{r_x}+T_{r_y}C_{r_y}+T_{r_z}C_{r_z})+\\&
-			G_{r_x}(-T_{r_w}C_{r_x}+T_{r_x}C_{r_w}+T_{r_y}C_{r_z}-T_{r_z}C_{r_y})+\\&
-			G_{r_y}(-T_{r_w}C_{r_y}-T_{r_x}C_{r_z}+T_{r_y}C_{r_w}+T_{r_z}C_{r_x})+\\&
-			G_{r_z}(-T_{r_w}C_{r_z}+T_{r_x}C_{r_y}-T_{r_y}C_{r_x}+T_{r_z}C_{r_w})+\\&
-			R_{r_w}(-1)+\\&
-			R_{r_x}(0)+\\&
-			R_{r_y}(0)+\\&
-			R_{r_z}(0)+\\&
-		\end{split}
+	    \begin{bmatrix}
+	    C_{r_w} T_{r_w}+C_{r_x} T_{r_x}+C_{r_y} T_{r_y}+C_{r_z} T_{r_z}\\
+	    -C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z}\\
+	    -C_{r_y} T_{r_w}-C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+	    -C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}+C_{r_w} T_{r_z}\\
+	    0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0
+	    \end{bmatrix}^T
 	\end{equation}
-	Which in turn generates a row of the a matrix in \autoref{eq:generalMatrix}:
+	
+	
+	From \autoref{eq:rrx} we generate:
 	\begin{equation}
-		\begin{bmatrix}
-			T_{r_w}C_{r_w}+T_{r_x}C_{r_x}+T_{r_y}C_{r_y}+T_{r_z}C_{r_z} \\
-			-T_{r_w}C_{r_x}+T_{r_x}C_{r_w}+T_{r_y}C_{r_z}-T_{r_z}C_{r_y} \\
-			-T_{r_w}C_{r_y}-T_{r_x}C_{r_z}+T_{r_y}C_{r_w}+T_{r_z}C_{r_x} \\
-			-T_{r_w}C_{r_z}+T_{r_x}C_{r_y}-T_{r_y}C_{r_x}+T_{r_z}C_{r_w} \\
-			0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0
-		\end{bmatrix}^T
-	\end{equation}
+	    \begin{split}
+	0= \\&
+	G_{r_y} (-C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}-C_{r_w} T_{r_z})+\\&
+	G_{r_z} (C_{r_y} T_{r_w}+C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+	G_{r_w} (C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z})+\\&
+	G_{r_x} (C_{r_w} T_{r_w}+C_{r_x} T_{r_x}-C_{r_y} T_{r_y}-C_{r_z} T_{r_z})+\\&
+	 R_{r_x}(-1)
+	 \end{split}
+	 \end{equation}
+	
+	 Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+	
+	 \begin{equation}
+	     \begin{bmatrix}
+	     -C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}-C_{r_w} T_{r_z}\\
+	     C_{r_y} T_{r_w}+C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+	     C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z}\\
+	     C_{r_w} T_{r_w}+C_{r_x} T_{r_x}-C_{r_y} T_{r_y}-C_{r_z} T_{r_z}\\
+	     0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0
+	      \end{bmatrix}^T
+	  \end{equation}
+	
+	
+	From \autoref{eq:rry} we generate:
+	\begin{equation}
+	    \begin{split}
+	0= \\&
+	G_{r_w} (C_{r_y} T_{r_w}-C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+	G_{r_x} (C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}+C_{r_w} T_{r_z})+\\&
+	G_{r_y} (C_{r_w} T_{r_w}-C_{r_x} T_{r_x}+C_{r_y} T_{r_y}-C_{r_z} T_{r_z})+\\&
+	G_{r_z} (-C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z})+\\&
+	 R_{r_y}(-1)
+	 \end{split}
+	 \end{equation}
+	
+	 Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+	
+	 \begin{equation}
+	     \begin{bmatrix}
+	     C_{r_y} T_{r_w}-C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+	     C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}+C_{r_w} T_{r_z}\\
+	     C_{r_w} T_{r_w}-C_{r_x} T_{r_x}+C_{r_y} T_{r_y}-C_{r_z} T_{r_z}\\
+	     -C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z}\\
+	     0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0
+	      \end{bmatrix}^T
+	  \end{equation}
+	  
+	  From \autoref{eq:rrz} we generate:
+	  \begin{equation}
+	      \begin{split}
+	  0= \\&
+	  G_{r_w} (C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}-C_{r_w} T_{r_z})+\\&
+	  G_{r_x} (-C_{r_y} T_{r_w}+C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+	  G_{r_y} (C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z})+\\&
+	  G_{r_z} (C_{r_w} T_{r_w}-C_{r_x} T_{r_x}-C_{r_y} T_{r_y}+C_{r_z} T_{r_z})+\\&
+	   R_{r_z}(-1)
+	   \end{split}
+	   \end{equation}
+	  
+	   Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+	  
+	   \begin{equation}
+	       \begin{bmatrix}
+	       C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}-C_{r_w} T_{r_z}\\
+	       -C_{r_y} T_{r_w}+C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+	       C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z}\\
+	       C_{r_w} T_{r_w}-C_{r_x} T_{r_x}-C_{r_y} T_{r_y}+C_{r_z} T_{r_z}\\
+	       0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0 \\ 0
+	        \end{bmatrix}^T
+	    \end{equation}
+	    
+From \autoref{eq:rdw} we generate:
+\begin{equation}
+    \begin{split}
+0= \\&
+G_{r_w} (C_{r_w} T_{d_w}+C_{r_x} T_{d_x}+C_{r_y} T_{d_y}+C_{r_z} T_{d_z}+C_{d_w} T_{r_w}+C_{d_x} T_{r_x}+C_{d_y} T_{r_y}+C_{d_z} T_{r_z})+\\&
+G_{r_x} (-C_{r_x} T_{d_w}+C_{r_w} T_{d_x}+C_{r_z} T_{d_y}-C_{r_y} T_{d_z}-C_{d_x} T_{r_w}+C_{d_w} T_{r_x}+C_{d_z} T_{r_y}-C_{d_y} T_{r_z})+\\&
+G_{r_y} (-C_{r_y} T_{d_w}-C_{r_z} T_{d_x}+C_{r_w} T_{d_y}+C_{r_x} T_{d_z}-C_{d_y} T_{r_w}-C_{d_z} T_{r_x}+C_{d_w} T_{r_y}+C_{d_x} T_{r_z})+\\&
+G_{r_z} (-C_{r_z} T_{d_w}+C_{r_y} T_{d_x}-C_{r_x} T_{d_y}+C_{r_w} T_{d_z}-C_{d_z} T_{r_w}+C_{d_y} T_{r_x}-C_{d_x} T_{r_y}+C_{d_w} T_{r_z})+\\&
+G_{d_w} (C_{r_w} T_{r_w}+C_{r_x} T_{r_x}+C_{r_y} T_{r_y}+C_{r_z} T_{r_z})+\\&
+G_{d_x} (-C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z})+\\&
+G_{d_y} (-C_{r_y} T_{r_w}-C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+G_{d_z} (-C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}+C_{r_w} T_{r_z})+\\&
+ R_{d_w}(-1)
+ \end{split}
+ \end{equation}
+
+ Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+
+ \begin{equation}
+     \begin{bmatrix}
+     C_{r_w} T_{d_w}+C_{r_x} T_{d_x}+C_{r_y} T_{d_y}+C_{r_z} T_{d_z}+C_{d_w} T_{r_w}+C_{d_x} T_{r_x}+C_{d_y} T_{r_y}+C_{d_z} T_{r_z}\\
+     -C_{r_x} T_{d_w}+C_{r_w} T_{d_x}+C_{r_z} T_{d_y}-C_{r_y} T_{d_z}-C_{d_x} T_{r_w}+C_{d_w} T_{r_x}+C_{d_z} T_{r_y}-C_{d_y} T_{r_z}\\
+     -C_{r_y} T_{d_w}-C_{r_z} T_{d_x}+C_{r_w} T_{d_y}+C_{r_x} T_{d_z}-C_{d_y} T_{r_w}-C_{d_z} T_{r_x}+C_{d_w} T_{r_y}+C_{d_x} T_{r_z}\\
+     -C_{r_z} T_{d_w}+C_{r_y} T_{d_x}-C_{r_x} T_{d_y}+C_{r_w} T_{d_z}-C_{d_z} T_{r_w}+C_{d_y} T_{r_x}-C_{d_x} T_{r_y}+C_{d_w} T_{r_z}\\
+     C_{r_w} T_{r_w}+C_{r_x} T_{r_x}+C_{r_y} T_{r_y}+C_{r_z} T_{r_z}\\
+     -C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z}\\
+     -C_{r_y} T_{r_w}-C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+     -C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}+C_{r_w} T_{r_z}\\
+     0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0 \\ 0
+      \end{bmatrix}^T
+  \end{equation}
+  
+  From \autoref{eq:rdx} we generate:
+  \begin{equation}
+      \begin{split}
+  0= \\&
+  G_{r_w} (C_{r_x} T_{d_w}-C_{r_w} T_{d_x}+C_{r_z} T_{d_y}-C_{r_y} T_{d_z}+C_{d_x} T_{r_w}-C_{d_w} T_{r_x}+C_{d_z} T_{r_y}-C_{d_y} T_{r_z})+\\&
+  G_{r_x} (C_{r_w} T_{d_w}+C_{r_x} T_{d_x}-C_{r_y} T_{d_y}-C_{r_z} T_{d_z}+C_{d_w} T_{r_w}+C_{d_x} T_{r_x}-C_{d_y} T_{r_y}-C_{d_z} T_{r_z})+\\&
+  G_{r_y} (-C_{r_z} T_{d_w}+C_{r_y} T_{d_x}+C_{r_x} T_{d_y}-C_{r_w} T_{d_z}-C_{d_z} T_{r_w}+C_{d_y} T_{r_x}+C_{d_x} T_{r_y}-C_{d_w} T_{r_z})+\\&
+  G_{r_z} (C_{r_y} T_{d_w}+C_{r_z} T_{d_x}+C_{r_w} T_{d_y}+C_{r_x} T_{d_z}+C_{d_y} T_{r_w}+C_{d_z} T_{r_x}+C_{d_w} T_{r_y}+C_{d_x} T_{r_z})+\\&
+  G_{d_w} (C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z})+\\&
+  G_{d_x} (C_{r_w} T_{r_w}+C_{r_x} T_{r_x}-C_{r_y} T_{r_y}-C_{r_z} T_{r_z})+\\&
+  G_{d_y} (-C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}-C_{r_w} T_{r_z})+\\&
+  G_{d_z} (C_{r_y} T_{r_w}+C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+   R_{d_x}(-1)
+   \end{split}
+   \end{equation}
+   
+   Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+  
+   \begin{equation}
+       \begin{bmatrix}
+       C_{r_x} T_{d_w}-C_{r_w} T_{d_x}+C_{r_z} T_{d_y}-C_{r_y} T_{d_z}+C_{d_x} T_{r_w}-C_{d_w} T_{r_x}+C_{d_z} T_{r_y}-C_{d_y} T_{r_z}\\
+       C_{r_w} T_{d_w}+C_{r_x} T_{d_x}-C_{r_y} T_{d_y}-C_{r_z} T_{d_z}+C_{d_w} T_{r_w}+C_{d_x} T_{r_x}-C_{d_y} T_{r_y}-C_{d_z} T_{r_z}\\
+       -C_{r_z} T_{d_w}+C_{r_y} T_{d_x}+C_{r_x} T_{d_y}-C_{r_w} T_{d_z}-C_{d_z} T_{r_w}+C_{d_y} T_{r_x}+C_{d_x} T_{r_y}-C_{d_w} T_{r_z}\\
+       C_{r_y} T_{d_w}+C_{r_z} T_{d_x}+C_{r_w} T_{d_y}+C_{r_x} T_{d_z}+C_{d_y} T_{r_w}+C_{d_z} T_{r_x}+C_{d_w} T_{r_y}+C_{d_x} T_{r_z}\\
+       C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}-C_{r_y} T_{r_z}\\
+       C_{r_w} T_{r_w}+C_{r_x} T_{r_x}-C_{r_y} T_{r_y}-C_{r_z} T_{r_z}\\
+       -C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}-C_{r_w} T_{r_z}\\
+       C_{r_y} T_{r_w}+C_{r_z} T_{r_x}+C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+       0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0 \\ 0
+        \end{bmatrix}^T
+    \end{equation}
+	
+	
+	From \autoref{eq:rdy} we generate:
+	\begin{equation}
+	    \begin{split}
+	0= \\&
+	G_{r_w} (C_{r_y} T_{d_w}-C_{r_z} T_{d_x}-C_{r_w} T_{d_y}+C_{r_x} T_{d_z}+C_{d_y} T_{r_w}-C_{d_z} T_{r_x}-C_{d_w} T_{r_y}+C_{d_x} T_{r_z})+\\&
+	G_{r_x} (C_{r_z} T_{d_w}+C_{r_y} T_{d_x}+C_{r_x} T_{d_y}+C_{r_w} T_{d_z}+C_{d_z} T_{r_w}+C_{d_y} T_{r_x}+C_{d_x} T_{r_y}+C_{d_w} T_{r_z})+\\&
+	G_{r_y} (C_{r_w} T_{d_w}-C_{r_x} T_{d_x}+C_{r_y} T_{d_y}-C_{r_z} T_{d_z}+C_{d_w} T_{r_w}-C_{d_x} T_{r_x}+C_{d_y} T_{r_y}-C_{d_z} T_{r_z})+\\&
+	G_{r_z} (-C_{r_x} T_{d_w}-C_{r_w} T_{d_x}+C_{r_z} T_{d_y}+C_{r_y} T_{d_z}-C_{d_x} T_{r_w}-C_{d_w} T_{r_x}+C_{d_z} T_{r_y}+C_{d_y} T_{r_z})+\\&
+	G_{d_w} (C_{r_y} T_{r_w}-C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+	G_{d_x} (C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}+C_{r_w} T_{r_z})+\\&
+	G_{d_y} (C_{r_w} T_{r_w}-C_{r_x} T_{r_x}+C_{r_y} T_{r_y}-C_{r_z} T_{r_z})+\\&
+	G_{d_z} (-C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z})+\\&
+	 R_{d_y}(-1)
+	 \end{split}
+	 \end{equation}
+	
+	 Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+	
+	 \begin{equation}
+	     \begin{bmatrix}
+	     C_{r_y} T_{d_w}-C_{r_z} T_{d_x}-C_{r_w} T_{d_y}+C_{r_x} T_{d_z}+C_{d_y} T_{r_w}-C_{d_z} T_{r_x}-C_{d_w} T_{r_y}+C_{d_x} T_{r_z}\\
+	     C_{r_z} T_{d_w}+C_{r_y} T_{d_x}+C_{r_x} T_{d_y}+C_{r_w} T_{d_z}+C_{d_z} T_{r_w}+C_{d_y} T_{r_x}+C_{d_x} T_{r_y}+C_{d_w} T_{r_z}\\
+	     C_{r_w} T_{d_w}-C_{r_x} T_{d_x}+C_{r_y} T_{d_y}-C_{r_z} T_{d_z}+C_{d_w} T_{r_w}-C_{d_x} T_{r_x}+C_{d_y} T_{r_y}-C_{d_z} T_{r_z}\\
+	     -C_{r_x} T_{d_w}-C_{r_w} T_{d_x}+C_{r_z} T_{d_y}+C_{r_y} T_{d_z}-C_{d_x} T_{r_w}-C_{d_w} T_{r_x}+C_{d_z} T_{r_y}+C_{d_y} T_{r_z}\\
+	     C_{r_y} T_{r_w}-C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+	     C_{r_z} T_{r_w}+C_{r_y} T_{r_x}+C_{r_x} T_{r_y}+C_{r_w} T_{r_z}\\
+	     C_{r_w} T_{r_w}-C_{r_x} T_{r_x}+C_{r_y} T_{r_y}-C_{r_z} T_{r_z}\\
+	     -C_{r_x} T_{r_w}-C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z}\\
+	     0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1 \\ 0
+	      \end{bmatrix}^T
+	  \end{equation}
+	  
+
+From \autoref{eq:rdz} we generate:
+\begin{equation}
+    \begin{split}
+0= \\&
+G_{r_w} (C_{r_z} T_{d_w}+C_{r_y} T_{d_x}-C_{r_x} T_{d_y}-C_{r_w} T_{d_z}+C_{d_z} T_{r_w}+C_{d_y} T_{r_x}-C_{d_x} T_{r_y}-C_{d_w} T_{r_z})+\\&
+G_{r_x} (-C_{r_y} T_{d_w}+C_{r_z} T_{d_x}-C_{r_w} T_{d_y}+C_{r_x} T_{d_z}-C_{d_y} T_{r_w}+C_{d_z} T_{r_x}-C_{d_w} T_{r_y}+C_{d_x} T_{r_z})+\\&
+G_{r_y} (C_{r_x} T_{d_w}+C_{r_w} T_{d_x}+C_{r_z} T_{d_y}+C_{r_y} T_{d_z}+C_{d_x} T_{r_w}+C_{d_w} T_{r_x}+C_{d_z} T_{r_y}+C_{d_y} T_{r_z})+\\&
+G_{r_z} (C_{r_w} T_{d_w}-C_{r_x} T_{d_x}-C_{r_y} T_{d_y}+C_{r_z} T_{d_z}+C_{d_w} T_{r_w}-C_{d_x} T_{r_x}-C_{d_y} T_{r_y}+C_{d_z} T_{r_z})+\\&
+G_{d_w} (C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}-C_{r_w} T_{r_z})+\\&
+G_{d_x} (-C_{r_y} T_{r_w}+C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z})+\\&
+G_{d_y} (C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z})+\\&
+G_{d_z} (C_{r_w} T_{r_w}-C_{r_x} T_{r_x}-C_{r_y} T_{r_y}+C_{r_z} T_{r_z})+\\&
+ R_{d_z}(-1)
+ \end{split}
+ \end{equation}
+
+ Which in turn generates another row of the $a$ matrix in \autoref{eq:generalMatrix}:
+
+ \begin{equation}
+     \begin{bmatrix}
+     C_{r_z} T_{d_w}+C_{r_y} T_{d_x}-C_{r_x} T_{d_y}-C_{r_w} T_{d_z}+C_{d_z} T_{r_w}+C_{d_y} T_{r_x}-C_{d_x} T_{r_y}-C_{d_w} T_{r_z}\\
+     -C_{r_y} T_{d_w}+C_{r_z} T_{d_x}-C_{r_w} T_{d_y}+C_{r_x} T_{d_z}-C_{d_y} T_{r_w}+C_{d_z} T_{r_x}-C_{d_w} T_{r_y}+C_{d_x} T_{r_z}\\
+     C_{r_x} T_{d_w}+C_{r_w} T_{d_x}+C_{r_z} T_{d_y}+C_{r_y} T_{d_z}+C_{d_x} T_{r_w}+C_{d_w} T_{r_x}+C_{d_z} T_{r_y}+C_{d_y} T_{r_z}\\
+     C_{r_w} T_{d_w}-C_{r_x} T_{d_x}-C_{r_y} T_{d_y}+C_{r_z} T_{d_z}+C_{d_w} T_{r_w}-C_{d_x} T_{r_x}-C_{d_y} T_{r_y}+C_{d_z} T_{r_z}\\
+     C_{r_z} T_{r_w}+C_{r_y} T_{r_x}-C_{r_x} T_{r_y}-C_{r_w} T_{r_z}\\
+     -C_{r_y} T_{r_w}+C_{r_z} T_{r_x}-C_{r_w} T_{r_y}+C_{r_x} T_{r_z}\\
+     C_{r_x} T_{r_w}+C_{r_w} T_{r_x}+C_{r_z} T_{r_y}+C_{r_y} T_{r_z}\\
+     C_{r_w} T_{r_w}-C_{r_x} T_{r_x}-C_{r_y} T_{r_y}+C_{r_z} T_{r_z}\\
+     0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ -1
+      \end{bmatrix}^T
+  \end{equation}
+  
+  
+These rows can then be put into a solver, such as numpy.linalg.lstsq, with the b matrix set to a single column of all zeros, equal in length to the height of the resulting $a$ matrix. 
 \end{document}
