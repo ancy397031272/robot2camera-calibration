@@ -144,10 +144,10 @@ class GridLocation(object):
         # Get new image
         self.image = self.cam.capture_image()
 
-        # Find chessboard corners. 9: cv2.CALIB_CB_FAST_CHECK +
-        # cv2.CV_CALIB_CB_ADAPTIVE_THRESH
+        # Find chessboard corners.
         re_projection_error, corners = cv2.findChessboardCorners(
-            self.image, (self. rows, self.cols), 9)
+            self.image, (self. rows, self.cols),
+            flags=cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_ADAPTIVE_THRESH)
 
         if not re_projection_error:
             raise RuntimeError('unable to find grid')
