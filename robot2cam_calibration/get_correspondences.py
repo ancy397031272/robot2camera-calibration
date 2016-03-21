@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 
@@ -6,6 +7,74 @@ import ur_cb2.cb2_robot as cb2_robot
 import json
 import time
 import numpy as np
+
+
+def main():
+    # Parse in arguments
+    parser = argparse.ArgumentParser(
+        description="Get correspondences between camera and UR Robot",
+        epilog="Gets correspondences between a camera and UR Robot with a "
+               "grid attached. Relies on pre-trained points to direct "
+               "robot motion. Will try to find the grid 5 times per "
+               "position. Generates a json file with all of the data "
+               "needed to then calculate the tool offset and the camera "
+               "to robot transformation.")
+
+    parser.add_argument("--samples", metavar="robot_samples", type=str,
+                        help='The filename for the file containing the list of'
+                             'points which the robot should move through. This'
+                             'file can be generated using the `cb2-record`'
+                             'command from the ur_cb2 package.',
+                        required=True)
+
+    parser.add_argument("-s", "--spacing", type=float,
+                        help="The grid spacing in mm.", required=True)
+
+    parser.add_argument("-c", "--columns", type=int,
+                        help="the number of inner corners horizontally",
+                        required=True)
+
+    parser.add_argument("-r", "--rows", type=int,
+                        help="the number of inner corners vertically",
+                        required=True)
+
+    parser.add_argument("--calibration", type=str,
+                        help="The filename of the camera calibration "
+                             "information. This file can be generated using the"
+                             "`calibrate-camera` command from the "
+                             "camera-calibration toolbox.",
+                        required=True)
+
+    parser.add_argument("--camera", type=str,
+                        help="The name of the camera to be used."
+                             "Valid options are:"
+                             "- `flycap`",
+                        default="flycap")
+
+    parser.add_argument("--address", type=str,
+                        help="The address of the robot in form: `###.###.###`",
+                        required=True)
+
+    parser.add_argument("--port", type=int,
+                        help="The port of the robot", default=30003)
+
+    parser.add_argument("--out", type=str,
+                        help="File to save output to",
+                        default="correspondences.json")
+
+    args = parser.parse_args
+
+    get_correspondences(
+        robot_samples=args.robot_samples,
+        calibration=args.calibration,
+        rows=args.rows,
+        cols=args.cols,
+        spacing=args.spacing,
+        camera=args.camera,
+        robot_address=args.address,
+        robot_port=args.port,
+        file_out=args.out
+    )
 
 
 def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
@@ -86,3 +155,6 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
     with open(os.path.join(os.path.splitext(file_out)[0], '.json'), 'w') as \
             result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
+
+if __name__ == '__main__':
+    main()

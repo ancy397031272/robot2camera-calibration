@@ -37,9 +37,7 @@ setup(name='robot2cam_calibration',
       ],
       include_package_data=True,
       entry_points={
-        'console_scripts': ['robot2cam-record=ur_cb2.receive.cb2_receive_example:'
-                            'main',
-                            'robot2cam-calculate=ur_cb2.receive.cb2_store_points:main',
-                            'robot2cam-show=']
+        'console_scripts': [
+            'robot2cam-record=robot2cam_calibration.get_correspondences:main']
       },
       zip_safe=False)
