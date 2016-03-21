@@ -7,7 +7,7 @@ Copyright (c) 2016 GTRC. All rights reserved.
 """
 
 import argparse
-import cb2_robot
+import ur_cb2.cb2_robot as cb2_robot
 import json
 import time
 import flycapture2 as fc2

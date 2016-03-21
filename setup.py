@@ -20,8 +20,7 @@ setup(name='robot2cam_calibration',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
+        'Operating System :: OS Independent'
       ],
       keywords='universal robots cb2 ur5 flycapture2 point grey',
       url='-',
@@ -32,7 +31,6 @@ setup(name='robot2cam_calibration',
       install_requires=[
           'numpy',
           'cv2',
-          'flycapture2',
           'ur_cb2'
       ],
       include_package_data=True,
