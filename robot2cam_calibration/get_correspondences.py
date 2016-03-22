@@ -65,7 +65,7 @@ def main():
     args = parser.parse_args
 
     get_correspondences(
-        robot_samples=args.robot_samples,
+        robot_samples=args.samples,
         calibration=args.calibration,
         rows=args.rows,
         cols=args.cols,
@@ -111,8 +111,8 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
         data = json.load(f)
         write_time = data['time']
         points = data['points']
-        print 'read in {} points, written at: {}'.format(len(points.keys()),
-                                                         write_time)
+        print('read in {} points, written at: {}'.format(len(points.keys()),
+                                                         write_time))
 
     camera2grid = []
     tcp2robot = []
@@ -124,7 +124,7 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
                                               False, 'joint'))
                 # TODO: this appears to skip the first point!
                 robot.move_on_stop()
-                print 'Beginning move: {}'.format(number)
+                print('Beginning move: {}'.format(number))
 
                 while not (robot.at_goal() and robot.is_stopped()):
                     time.sleep(.25)
@@ -137,14 +137,14 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
                         calib.show_images()
                         with robot.receiver.lock:
                             tcp2robot.append(robot.receiver.position)
-                        print "got the grid"
+                        print("got the grid")
                         go_on = 6
-                    except RuntimeError, e:
-                        print "something went wrong: {}".format(e)
+                    except RuntimeError as e:
+                        print("something went wrong: {}".format(e))
                         go_on += 1
 
-    print np.asarray(tcp2robot)  # Axis-Angle [x,y,z,ax,ay,az]
-    print np.asarray(camera2grid)
+    print(np.asarray(tcp2robot))  # Axis-Angle [x,y,z,ax,ay,az]
+    print(np.asarray(camera2grid))
     json_dict = {"grid": {"rows": rows,
                           "cols": cols,
                           "spacing": spacing},
