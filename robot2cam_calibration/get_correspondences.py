@@ -50,7 +50,7 @@ def main():
                "needed to then calculate the tool offset and the camera "
                "to robot transformation.")
 
-    parser.add_argument("--samples", metavar="robot_samples", type=str,
+    parser.add_argument("--samples", type=str,
                         help='The filename for the file containing the list of'
                              'points which the robot should move through. This'
                              'file can be generated using the `cb2-record`'
@@ -92,13 +92,13 @@ def main():
                         help="File to save output to",
                         default="correspondences.json")
 
-    args = parser.parse_args
+    args = parser.parse_args()
 
     get_correspondences(
         robot_samples=args.samples,
         calibration=args.calibration,
         rows=args.rows,
-        cols=args.cols,
+        cols=args.columns,
         spacing=args.spacing,
         camera=args.camera,
         robot_address=args.address,
