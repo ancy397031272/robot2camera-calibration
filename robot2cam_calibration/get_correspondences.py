@@ -182,8 +182,7 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
                  "calibration": calibration,
                  "tcp2robot": tcp2robot,
                  "camera2grid": camera2grid}
-    with open(os.path.join(os.path.splitext(file_out)[0], '.json'), 'w') as \
-            result_json_file:
+    with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
 
 if __name__ == '__main__':

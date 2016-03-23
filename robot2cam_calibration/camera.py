@@ -29,7 +29,7 @@ TODO: Add some more:
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+import threading
 
 import numpy as np
 import cv2
@@ -87,6 +87,9 @@ class Camera(object):
             raise RuntimeError("Unable to capture and rectify image")
         return rectified_image
 
+    def __del__(self):
+        self.cam.__del__()
+
 
 class FlyCap2(object):
     """A wrapper to capture images from a flycapture2 camera
@@ -117,15 +120,61 @@ class FlyCap2(object):
         self.context.start_capture()
         self.fc2_image = fc2.Image()
         print "done with flycap2 setup"
+        self.cam_on = True
+
+        self.image = None
+        cv2.namedWindow('raw', cv2.WINDOW_NORMAL)
+        cv2.waitKey(5)
+
+        self.__acquisition_thread = None
+        self.lock = threading.Lock()
+
+        self.run = True
+        self.__acquisition_thread = threading.Thread(group=None,
+                                                     target=self.acquire,
+                                                     name='acquisition_thread',
+                                                     args=(),
+                                                     kwargs={})
+        self.__acquisition_thread.start()
 
     def __del__(self):
         """Shutdown the communications with the flycapture2 device."""
-        self.context.stop_capture()
-        self.context.disconnect()
+        self.stop()
+        if self.cam_on:
+            print("flycap cam already disconnected")
+        else:
+            self.context.stop_capture()
+            self.context.disconnect()
+        cv2.destroyWindow('raw')
 
     def capture_image(self):
         """Return the latest image from the camera
 
         Returns: np.array of the latest image from the camera.
         """
-        return np.array(self.context.retrieve_buffer(self.fc2_image))
+        with self.lock:
+            return np.copy(self.image)
+
+    def stop(self):
+        if self.__acquisition_thread is not None:
+            if self.__acquisition_thread.is_alive():
+                print("shutting down acquisition thread")
+                self.run = False
+                self.__acquisition_thread.join()
+                if self.__acquisition_thread.is_alive():
+                    print('failed to shutdown auxiliary thread')
+                else:
+                    print('shutdown auxiliary thread')
+            else:
+                print('auxiliary thread already shutdown')
+        else:
+            print('no auxiliary threads exist')
+
+    def acquire(self):
+        while self.run:
+            with self.lock:
+                self.image = np.array(self.context.retrieve_buffer(self.fc2_image))
+            cv2.imshow('raw', self.image)
+            cv2.waitKey(5)
+
+

@@ -115,7 +115,8 @@ class GridLocation(object):
         Closes any open OpenCV windows and closes the communications with the
         camera.
         """
-        cv2.destroyAllWindows()
+        cv2.destroyWindow('result')
+        self.cam.__del__()
 
     def show_images(self):
         """Displays the images.
