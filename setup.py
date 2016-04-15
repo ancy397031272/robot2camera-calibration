@@ -31,7 +31,9 @@ setup(name='robot2cam_calibration',
       install_requires=[
           'numpy',
           'cv2',
-          'ur_cb2'
+          'ur_cb2',
+          'quaternions',
+          'dual_quaternions'
       ],
       # dependency_links=['https://github.com/jordens/pyflycapture2'],
       include_package_data=True,
