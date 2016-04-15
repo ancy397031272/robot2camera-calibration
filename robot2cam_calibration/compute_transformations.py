@@ -86,9 +86,8 @@ def compute_transformation(correspondences, file_out):
         t_rot = Quaternion.from_euler(t_raw[3:])
         t_trans = Quaternion.from_translation(t_raw[:3])
         t = DualQuaternion(t_rot, t_trans)
+        t = t.conjugate_reverse()
 
-        bob = Quaternion(5,2,3,4)
-        # t = DualQuaternion(Quaternion.from_translation(fromtcp2robot[i][0:3]), Quaternion.from_.invert # Axis-Angle [x,y,z,ax,ay,az]
         data[i*8: (i+1)*8] = np.array([
             [c.real.w*t.real.w+c.real.x*t.real.x+c.real.y*t.real.y+c.real.z*t.real.z,
             -c.real.x*t.real.w+c.real.w*t.real.x+c.real.z*t.real.y-c.real.y*t.real.z,
