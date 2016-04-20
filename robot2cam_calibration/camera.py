@@ -47,7 +47,7 @@ class Camera(object):
     ..................
     - Flycapture2 devices : `flycap`, `flycap2`, `flycapture`, `flycapture2`
     """
-    def __init__(self, name, intrinsic, distortion):
+    def __init__(self, name, intrinsic=None, distortion=None):
         """Sets up camera acquisition and reads calibration data.
 
         Args:
@@ -81,8 +81,11 @@ class Camera(object):
             RuntimeError: It was not possible to capture and rectify an image
         """
         raw_image = self.cam.capture_image()
-        rectified_image = cv2.undistort(raw_image, self.intrinsic,
-                                        self.distortion)
+        if self.intrinsic is not None and self.distortion is not None:
+            rectified_image = cv2.undistort(raw_image, self.intrinsic,
+                                            self.distortion)
+        else:
+            rectified_image = raw_image
         if rectified_image is None:
             raise RuntimeError("Unable to capture and rectify image")
         return rectified_image
