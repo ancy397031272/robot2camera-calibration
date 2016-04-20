@@ -100,6 +100,14 @@ class Camera(object):
     def __del__(self):
         self.cam.__del__()
 
+    def __enter__(self):
+        """Enters the camera from a with statement"""
+        return self
+
+    def __exit__(self, *_):
+        """Exits at the end of a context manager statement by destructing."""
+        self.__del__()
+
 
 class FlyCap2(object):
     """A wrapper to capture images from a flycapture2 camera
