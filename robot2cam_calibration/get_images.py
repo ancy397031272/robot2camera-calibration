@@ -115,6 +115,9 @@ def get_images_poses(robot_samples, cam_name,
     tcp2robot = []
     im_num = 0
 
+    if not os.path.isdir(folder_out):
+        os.mkdir(folder_out)
+
     with cb2_robot.URRobot(robot_address, robot_port) as robot:
         with camera.Camera(cam_name) as cam:
             for number in sorted([int(x) for x in points.keys()]):
