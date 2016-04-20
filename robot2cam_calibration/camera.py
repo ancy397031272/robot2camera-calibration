@@ -87,6 +87,13 @@ class Camera(object):
             raise RuntimeError("Unable to capture and rectify image")
         return rectified_image
 
+    def capture_raw(self):
+        """ Return the raw (still distorted) image.
+
+        Returns: The most recent raw image as a numpy array
+        """
+        return self.cam.capture_image()
+
     def __del__(self):
         self.cam.__del__()
 
