@@ -29,6 +29,7 @@ import json
 import datetime
 import os
 
+import math
 import numpy as np
 
 import cv2
@@ -77,13 +78,16 @@ def compute_transformation(correspondences, file_out):
     data = np.zeros((len(tcp2robot)*8, 16))
     for i in range(0, len(tcp2robot)):
         c_raw = camera2grid[i]
-        (c_rot_mat, _) = cv2.Rodrigues(np.array(c_raw[3:])) #Calculate rotation matrix from rodrigues values
+        (c_rot_mat, _) = cv2.Rodrigues(np.array(c_raw[3:]))
+        #Calculate rotation matrix from rodrigues values
         c_rot_quat = Quaternion.from_matrix(c_rot_mat)
         c_trans_quat = Quaternion.from_translation(c_raw[:3])
         c = DualQuaternion(c_rot_quat, c_trans_quat)
 
         t_raw = tcp2robot[i]
-        t_rot = Quaternion.from_euler(t_raw[3:])
+        angle = math.sqrt(math.pow(t_raw[3], 2) + math.pow(t_raw[4], 2) +
+                          math.pow(t_raw[5], 2))
+        t_rot = Quaternion.from_axis_angle(t_raw[3:], angle)
         t_trans = Quaternion.from_translation(t_raw[:3])
         t = DualQuaternion(t_rot, t_trans)
         t = t.conjugate_reverse()
