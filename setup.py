@@ -39,6 +39,7 @@ setup(name='robot2cam_calibration',
       include_package_data=True,
       entry_points={
         'console_scripts': [
-            'robot2cam-record=robot2cam_calibration.get_correspondences:main']
+            'robot2cam-record=robot2cam_calibration.get_correspondences:main',
+            'robot2cam-images=robot2cam_calibration.get_images:main']
       },
       zip_safe=False)
