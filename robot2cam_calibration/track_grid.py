@@ -216,16 +216,37 @@ def draw_axes(image_raw, corners, image_points):
     """
     corner = tuple(corners[0].ravel())
     image = image_raw.copy()
-    temp = cv2.line(image, corner, tuple(image_points[0].ravel()),
+    temp = cv2.arrowedLine(image, corner, tuple(image_points[0].ravel()),
                     (255, 0, 0), 5)
     if temp is not None:
         image = temp
-    temp = cv2.line(image, corner, tuple(image_points[1].ravel()),
+    letters = np.array(image_points)
+    letter_space = 30
+    for row in range(letters.shape[0]):
+        if letters[row][0][0] < corner[0]:
+            letters[row][0][0]-=letter_space
+        if letters[row][0][1] < corner[1]:
+            letters[row][0][1]-=letter_space
+        else:
+            letters[row][0][1] += 1.5*letter_space
+    temp = cv2.putText(image,"x",tuple(letters[0].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 4)
+    if temp is not None:
+        image = temp
+
+    temp = cv2.arrowedLine(image, corner, tuple(image_points[1].ravel()),
                     (0, 255, 0), 5)
     if temp is not None:
         image = temp
-    temp = cv2.line(image, corner, tuple(image_points[2].ravel()),
+    temp = cv2.putText(image,"y",tuple(letters[1].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
+    if temp is not None:
+        image = temp
+
+    temp = cv2.arrowedLine(image, corner, tuple(image_points[2].ravel()),
                     (0, 0, 255), 5)
     if temp is not None:
         image = temp
+    temp = cv2.putText(image,"z",tuple(letters[2].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
+    if temp is not None:
+        image = temp
+
     return image

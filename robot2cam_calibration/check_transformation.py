@@ -64,11 +64,9 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
     if not os.path.exists(directory_out):
         os.makedirs(directory_out)
 
-    object_point = np.zeros((cols * rows, 3), np.float32)
-    object_point[:, :2] = (np.mgrid[
-                                0:(rows * space):space,
-                                0:(cols * space):space]
-                                .T.reshape(-1, 2))
+    axis_length = .1
+    axis = np.float32([[0,0,0],[axis_length, 0, 0], [0, axis_length, 0],
+                                [0, 0, axis_length]]).reshape(-1, 3)
 
     number_found = 0
 
@@ -83,18 +81,36 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
 
         # If the image_file isn't an image, move on
         if img is not None:
-            image_points = cv2.projectPoints(object_point, Rvec, Tvec,
+            image_points, jac = cv2.projectPoints(axis, Rvec, Tvec,
                                              intrinsic,
                                              distortion)
-            for i in range(0,len(image_points)):
-                cv2.circle(img,tuple(image_points[i]),3,[100,200,100])
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+            img = track_grid.draw_axes(image_raw=img, corners=image_points[0], image_points=image_points[1:])
+            # for i in range(0,len(image_points)):
+            #     cv2.circle(img,tuple(image_points[i]),3,[100,200,100])
             cv2.imwrite(os.path.join(ResultFolder, "result" + str(number_found) + ".jpg"), img)
             number_found += 1
+            print("finished processing Image {}".format(number_found))
+    print("Done processing all images")
 
 
+# UR
+# Rotm = np.matrix([[-.50634,.74773,-.42956],[.85721,.49064,-.15638],[.09383,-.44741,-.88939]])
+# Tvec = np.array([.41163,.25832,1])
 
-Rotm = np.matrix([[-.50634,.74773,-.42956],[.85721,.49064,-.15638],[.09383,-.44741,-.88939]])
-Tvec = np.array([.41163,.25832,1])
+# Test
+# Rotm = np.matrix([[1.000, 0.015, 0.001],[-0.015, 0.991, 0.131],[0.001, -0.131, 0.991]])
+# Tvec = np.array([-0.355, 0.046, 2.189])
+#
+# Test2
+# [0.977 -0.202 -0.063 0.047]
+# [0.183 0.957 -0.223 0.081]
+# [0.106 0.206 0.973 2.221]
+# [0.000 0.000 0.000 1.000]
+Rotm = np.matrix([[0.977, -0.202, -0.063],[0.183, 0.957, -0.223],[0.106, 0.206, 0.973]])
+Tvec = np.array([0.047, 0.081, 2.221])
+
+
 ImageFolder = 'Images'
 ResultFolder = 'Result'
 rows = 7
