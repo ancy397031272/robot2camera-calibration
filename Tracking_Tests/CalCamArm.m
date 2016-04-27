@@ -190,11 +190,27 @@ end
 [points, boardSize, imagesUsed] = detectCheckerboardPoints(imageFiles);
 if(sum(imagesUsed) == 0)
     error('No checkerboards were found in the images');
-elseif(sum(imagesUsed) < 10)
-    warning(['only %i checkerboards found.\n',...
-        '10 images is the minimum number of boards recommended for an accurate calibration (though more is better, orignal calibration used 50+)\n',...
-        'Check your images and keep in mind, lighting, occlusions and backgrounds with roughly checkered patterns'], tValid);
+% elseif(sum(imagesUsed) < 10)
+%     warning(['only %i checkerboards found.\n',...
+%         '10 images is the minimum number of boards recommended for an accurate calibration (though more is better, orignal calibration used 50+)\n',...
+%         'Check your images and keep in mind, lighting, occlusions and backgrounds with roughly checkered patterns'], tValid);
 end
+
+% if(verbose)
+%     fprintf('Saving chessboard images\n');
+% end
+% mkdir('ChessboardsFound')
+% for i = find(imagesUsed)'
+%    f = figure(1);
+%    imshow(imread(imageFiles{i})); 
+%    hold on; 
+%    plot(points(:,1,i), points(:,2,i), 'ro');
+%    hold off
+%    saveas(f, sprintf('ChessboardsFound/chessboard%i.png',i))
+% end
+% if(verbose)
+%     fprintf('Done saving chessboard images\n');
+% end
 
 %% Process arm poses
 

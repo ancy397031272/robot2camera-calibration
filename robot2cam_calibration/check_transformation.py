@@ -69,10 +69,12 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
                                 [0, 0, axis_length]]).reshape(-1, 3)
 
     number_found = 0
-
+    image_points = np.zeros((Rotm.shape[0], 4, 1, 2))
     # Change rotation matrix into rotation vector
-    Rvec, jac = cv2.Rodrigues(Rotm)
-
+    for i in range(Rotm.shape[0]):
+        rvec, jac = cv2.Rodrigues(Rotm[i])
+        image_points[i], jac = cv2.projectPoints(axis, rvec, Tvec[i], intrinsic,
+                                                 distortion)
     for image_file in file_names:
         image_file = os.path.join(target_directory, image_file)
 
@@ -81,11 +83,11 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
 
         # If the image_file isn't an image, move on
         if img is not None:
-            image_points, jac = cv2.projectPoints(axis, Rvec, Tvec,
-                                             intrinsic,
-                                             distortion)
+            
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-            img = track_grid.draw_axes(image_raw=img, corners=image_points[0], image_points=image_points[1:])
+            for i in range(image_points.shape[0]):
+                img = track_grid.draw_axes(image_raw=img, corners=image_points[i][0],
+                                           image_points=image_points[i][1:])
             # for i in range(0,len(image_points)):
             #     cv2.circle(img,tuple(image_points[i]),3,[100,200,100])
             cv2.imwrite(os.path.join(ResultFolder, "result" + str(number_found) + ".jpg"), img)
@@ -107,8 +109,30 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
 # [0.183 0.957 -0.223 0.081]
 # [0.106 0.206 0.973 2.221]
 # [0.000 0.000 0.000 1.000]
-Rotm = np.matrix([[0.977, -0.202, -0.063],[0.183, 0.957, -0.223],[0.106, 0.206, 0.973]])
-Tvec = np.array([0.047, 0.081, 2.221])
+# Rotm = np.matrix([[0.977, -0.202, -0.063],[0.183, 0.957, -0.223],[0.106, 0.206, 0.973]])
+# Tvec = np.array([0.047, 0.081, 2.221])
+
+# with axis angle
+#Rotm = np.matrix([[-0.0010,   -0.9984,   -0.0558],[0.9995,    0.0009,   -0.0328],[0.0328,   -0.0558,    0.9979]])
+#Tvec = np.array([0.0554,   -0.2315,   -0.0225])
+
+# manual guess
+#Rotm = np.matrix([[-0.707,   0.707,   0.0],[0.0,   0.0,   -1.0],[-0.707,   -0.707,    0.0]])
+#Tvec = np.array([0.1,   0.35,   1.0])
+
+# measure manual guess
+# Rotm = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
+# Rotm = np.matrix([[-0.707,   0.707,   0.0],[0.0,   0.0,   -1.0],[-0.707,   -0.707,    0.0]])
+# Tvec = np.array([0.2,   0.75,   2.0])
+
+Rotm = np.array([
+    [[-0.707, 0.707, 0.0], [0.0, 0.0, -1.0], [-0.707, -0.707, 0.0]],
+    [[0.1419, -0.5214, -0.8412], [-0.8623, -0.4826, 0.1536 ], [-0.4861, 0.7036, -0.5181]]
+])
+Tvec = np.array([
+    [0.2, 0.75, 2.0],
+    [0.3517,   -0.1479,   1.2312]
+])
 
 
 ImageFolder = 'Images'

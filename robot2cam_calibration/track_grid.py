@@ -214,6 +214,8 @@ def draw_axes(image_raw, corners, image_points):
     Returns: numpy.ndarray Image with the axes drawn on it.
 
     """
+    corners = np.rint(corners).astype('int')
+    image_points = np.rint(image_points).astype('int')
     corner = tuple(corners[0].ravel())
     image = image_raw.copy()
     temp = cv2.arrowedLine(image, corner, tuple(image_points[0].ravel()),
