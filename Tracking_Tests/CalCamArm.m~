@@ -181,7 +181,8 @@ imageFiles = {imageFiles(~[imageFiles.isdir]).name};
 for i = 1:length(imageFiles)
     imageFiles{i} = [imageFolder filesep imageFiles{i}];
 end
-
+addpath('sort_nat/')
+sort_nat(imageFiles)
 if(verbose)
     fprintf('Extracting Chessboards\n');
 end
@@ -313,7 +314,7 @@ for i = 1:size(projectedGuess,3)
    end
 
    legend([p1, p2, p3, p4, p5, p6, p7, p8, p9], 'detected', 'guess', 'solution','base initial guess','tcp initial guess','grid initial guess', 'base solution', 'tcp solution', 'grid solution')
-   annotation('textbox', [0,0,.10,.10], 'String', 'Red is x, Green is y, Blue is z', 'FitBoxToText','on','Background','white','Color','red')
+   annotation('textbox', [0,0,.10,.10], 'String', 'Red is x, Green is y, Blue is z', 'FitBoxToText','on','BackgroundColor','white','Color','red')
    hold off
    saveas(f, sprintf('chessboards/chessboard%i.png',i))
 end

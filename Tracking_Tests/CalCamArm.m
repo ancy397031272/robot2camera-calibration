@@ -181,7 +181,8 @@ imageFiles = {imageFiles(~[imageFiles.isdir]).name};
 for i = 1:length(imageFiles)
     imageFiles{i} = [imageFolder filesep imageFiles{i}];
 end
-
+addpath('sort_nat/');
+imageFiles = sort_nat(imageFiles);
 if(verbose)
     fprintf('Extracting Chessboards\n');
 end
