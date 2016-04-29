@@ -30,9 +30,10 @@ import numpy as np
 import camera
 import json
 import track_grid
+import re
 
 
-def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, space, intrinsic, distortion):
+def check_transformation(supermatrix, ImageFolder, ResultFolder, rows, cols, space, intrinsic, distortion):
     """Plots transformed 3D world points onto camera image
 
             Args:
@@ -69,13 +70,14 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
                                 [0, 0, axis_length]]).reshape(-1, 3)
 
     number_found = 0
-    image_points = np.zeros((Rotm.shape[0], 4, 1, 2))
+
+
     # Change rotation matrix into rotation vector
-    for i in range(Rotm.shape[0]):
-        rvec, jac = cv2.Rodrigues(Rotm[i])
-        image_points[i], jac = cv2.projectPoints(axis, rvec, Tvec[i], intrinsic,
-                                                 distortion)
-    for image_file in file_names:
+    # for i in range(Rotm.shape[0]):
+    #     rvec, jac = cv2.Rodrigues(Rotm[i])
+    #     image_points[i], jac = cv2.projectPoints(axis, rvec, Tvec[i], intrinsic,
+    #                                              distortion)
+    for image_file in sort_nicely(file_names):
         image_file = os.path.join(target_directory, image_file)
 
         # Try to read in image as gray scale
@@ -83,19 +85,40 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
 
         # If the image_file isn't an image, move on
         if img is not None:
-            
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-            for i in range(image_points.shape[0]):
-                img = track_grid.draw_axes(image_raw=img, corners=image_points[i][0],
-                                           image_points=image_points[i][1:])
+            for j in range(supermatrix[number_found].shape[0]):
+                cam2target = supermatrix[number_found][j]
+                rvec, jac = cv2.Rodrigues(cam2target[0:3,0:3])
+                image_points, jac = cv2.projectPoints(axis, rvec, cam2target[0:3,3],
+                                                         intrinsic,
+                                                         distortion)
+                img = track_grid.draw_axes(image_raw=img, corners=image_points[0],
+                                               image_points=image_points[1:])
             # for i in range(0,len(image_points)):
             #     cv2.circle(img,tuple(image_points[i]),3,[100,200,100])
             cv2.imwrite(os.path.join(ResultFolder, "result" + str(number_found) + ".jpg"), img)
+            print("finished processing Image {}".format(image_file))
             number_found += 1
-            print("finished processing Image {}".format(number_found))
     print("Done processing all images")
 
 
+# http://stackoverflow.com/questions/4623446/how-do-you-sort-files-numerically
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def sort_nicely(l):
+    """ Sort the given list in the way that humans expect.
+    """
+    return sorted(l, key=alphanum_key)
 # UR
 # Rotm = np.matrix([[-.50634,.74773,-.42956],[.85721,.49064,-.15638],[.09383,-.44741,-.88939]])
 # Tvec = np.array([.41163,.25832,1])
@@ -150,28 +173,90 @@ def check_transformation(Rotm, Tvec, ImageFolder, ResultFolder, rows, cols, spac
 # row4: inverse transform to base via row3:
 # row5: estimate from calibration software
 
-Rotm = np.array([
-    [[-0.00500405, 0.99998434, 0.0025046],
-     [-0.9306746, -0.00374094, -0.36582892],
-     [-0.36581382, -0.00416159, 0.93067875]],
-    [[0.977, -0.178, -0.121],
-     [0.136, 0.946, -0.294],
-     [0.167, 0.270, 0.948]],
-    [[- 0.00500405, -0.99998434, -0.00250460000000012],
-     [- 0.9306746, 0.00374093999999996, 0.36582892],
-     [- 0.36581382, 0.00416159000000011, -0.93067875]],
-    [[-0.659927435608819, 0.751329313735808, -0.0001893009399004],
-     [0.199371042478852, 0.174873921787055, -0.964194121183759],
-     [-0.72439420933552, -0.636335894927072, -0.265197405236951]],
-    np.eye(3)
-])
-Tvec = np.array([
-    [151.48231455772967, -45.84279051621655, 1140.7020382437486],
-    [-38.0, -202.0, 2235.0],
-    [250.55, -218.392, 1072.610],
-    [75.79, 552.50, 1656.20],
-    [154.61, 156.377, 2032.33]
-])
+# Rotm = np.array([
+#     [[-0.00500405, 0.99998434, 0.0025046],
+#      [-0.9306746, -0.00374094, -0.36582892],
+#      [-0.36581382, -0.00416159, 0.93067875]],
+#     [[0.977, -0.178, -0.121],
+#      [0.136, 0.946, -0.294],
+#      [0.167, 0.270, 0.948]],
+#     [[- 0.00500405, -0.99998434, -0.00250460000000012],
+#      [- 0.9306746, 0.00374093999999996, 0.36582892],
+#      [- 0.36581382, 0.00416159000000011, -0.93067875]],
+#     [[-0.659927435608819, 0.751329313735808, -0.0001893009399004],
+#      [0.199371042478852, 0.174873921787055, -0.964194121183759],
+#      [-0.72439420933552, -0.636335894927072, -0.265197405236951]],
+#     np.eye(3)
+# ])
+# Tvec = np.array([
+#     [151.48231455772967, -45.84279051621655, 1140.7020382437486],
+#     [-38.0, -202.0, 2235.0],
+#     [250.55, -218.392, 1072.610],
+#     [75.79, 552.50, 1656.20],
+#     [154.61, 156.377, 2032.33]
+# ])
+
+supermatrix2 = np.array([[
+    [[-0.00500405, 0.99998434, 0.0025046,151.48231455772967],
+     [-0.9306746, -0.00374094, -0.36582892,-45.84279051621655],
+     [-0.36581382, -0.00416159, 0.93067875, 1140.7020382437486],
+     [0,0,0,1]],
+    [[0.977, -0.178, -0.121,-38.0],
+     [0.136, 0.946, -0.294, -202.0],
+     [0.167, 0.270, 0.948, 2235.0],
+     [0,0,0,1]],
+    [[- 0.00500405, -0.99998434, -0.00250460000000012,250.55],
+     [- 0.9306746, 0.00374093999999996, 0.36582892,-218.392],
+     [- 0.36581382, 0.00416159000000011, -0.93067875,1072.610],
+     [0,0,0,1]],
+    [[-0.659927435608819, 0.751329313735808, -0.0001893009399004,75.79],
+     [0.199371042478852, 0.174873921787055, -0.964194121183759,552.50],
+     [-0.72439420933552, -0.636335894927072, -0.265197405236951,1656.20],
+     [0,0,0,1]],
+    [[1,0,0,154.61],
+     [0,1,0,156.377],
+     [0,0,1,2032.33],
+     [0,0,0,1]]
+]])
+
+grid2tcp = np.array(
+    [[1.0000,0,0,185.0000],
+     [0,-1.0000,-0.0000,100.0000],
+     [0,0.0000,-1.0000,0],
+     [0,0,0,1.0000]]
+)
+
+with open('../examples/gridFinding.json', 'r') as grid_json:
+    json_dictionary = json.load(grid_json)
+
+cam2grid = np.array(json_dictionary['camera2grid'])
+base2tcp = np.array(json_dictionary['tcp2robot'])
+
+cam2gridT = np.zeros((cam2grid.shape[0], 4, 4))
+base2tcpT = np.zeros((cam2grid.shape[0], 4, 4))
+
+for i in range(cam2grid.shape[0]):
+    [cam2gridRot, _] = cv2.Rodrigues((cam2grid[i][3:]))
+    translation = np.array([cam2grid[i][:3]])
+    cam2gridT[i] = np.concatenate((np.concatenate((cam2gridRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
+
+for i in range(cam2grid.shape[0]):
+    [cam2tcpRot, _] = cv2.Rodrigues((base2tcp[i][3:]))
+    translation = np.array([base2tcp[i][:3]])*1000
+    base2tcpT[i] = np.concatenate((np.concatenate((cam2tcpRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
+
+cam2tcpT = np.matmul(cam2gridT,grid2tcp)
+
+tcp2baseT = np.zeros(base2tcpT.shape)
+for i in range(base2tcpT.shape[0]):
+    tcp2baseT[i] = np.linalg.inv(base2tcpT[i])
+
+cam2baseT = np.matmul(cam2tcpT,tcp2baseT)
+
+supermatrix = np.zeros((cam2baseT.shape[0],3,4,4))
+supermatrix[:,0] = cam2baseT
+supermatrix[:,1] = cam2tcpT
+supermatrix[:,2] = cam2gridT
 
 ImageFolder = 'Images'
 ResultFolder = 'Result'
@@ -182,4 +267,4 @@ intrinsic = np.array([[2462.345193638386,0.0,1242.6269086495981],[0.0,2463.61338
                      [0.0,0.0,1.0]])
 distortion = np.array([[-0.3954032063765203,0.20971494160750948,0.0008056336338866635,9.237725225524615e-05,
                        -0.06042030845477194]])
-check_transformation(Rotm,Tvec,ImageFolder,ResultFolder,rows,cols,space,intrinsic,distortion)
+check_transformation(supermatrix,ImageFolder,ResultFolder,rows,cols,space,intrinsic,distortion)
