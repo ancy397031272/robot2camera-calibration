@@ -36,7 +36,7 @@ HOME = {X 0,Y 0,Z 0,A 0,B 0,C 0} ; right in front of the table
 PTP $POS_ACT
 LIN  SAFE C_DIS ; BCO run
 
-FOR Index = 1 TO 3
+FOR Index = 1 TO 29
     PTP CalibrationPoints[Index] C_PTP
     WAIT SEC 5
 ENDFOR
