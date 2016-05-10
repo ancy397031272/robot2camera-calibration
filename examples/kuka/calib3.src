@@ -8,7 +8,7 @@ REAL SETUP_VELOCITY,TRACK_VELOCITY
 POS SAFE, HOME
 ;---------- Initialization ---------
 ;...........SETUP VELOCITIES........
-BCO_VELOCITY = 30 ; PERCENT
+BCO_VELOCITY = 5 ; PERCENT
 SETUP_VELOCITY = .5 ; M/S
 TRACK_VELOCITY = .05 ; M/S
 ;...................................
@@ -21,7 +21,7 @@ $APO.CDIS = 75 ;DISTANCE FROM POINT TO BEGIN BLEND IN MM
 
 FOR I=1 TO  6
 $VEL_AXIS[I] = BCO_VELOCITY ; max axis velocity %
-$ACC_AXIS[I] = 30 ; max axis accel %
+$ACC_AXIS[I] = 10 ; max axis accel %
 ENDFOR
 
 $VEL.CP = SETUP_VELOCITY ; linear velocity m/s
