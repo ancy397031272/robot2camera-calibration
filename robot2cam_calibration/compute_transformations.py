@@ -56,15 +56,25 @@ def main():
                         help="File to save output to",
                         default="transformation.json")
 
-    parser.add_argument("--")
+    parser.add_argument("--cam2rob", type=np.matrix,
+                        help="Initial guess for the camera to robot transformation",
+                        default=np.identity(4))
+
+    parser.add_argument("--tcp2target", type=np.matrix,
+                        help="Initial guess for the tcp to base transformation",
+                        default=np.identity(4))
+
+    parser.add_argument("--max_cam2rob", type=np.matrix,
+                        help="Maximum deviation of the cam2robot transformation from the guess",
+                        default=np.matrix(''))
 
     args = parser.parse_args()
 
     compute_transformation(
         correspondences=args.correspondences,
         file_out=args.out,
-        am2rob_guess=args.arm2rob_guess,
-        tcp2target_guess=args.tcp2targ_guess,
+        cam2rob_guess=args.cam2rob,
+        tcp2target_guess=args.tcp2target,
         max_cam2rob_deviation=args.max_cam2rob_deviation,
         max_tcp2target_deviation=args.max_tcp2target_deviation
     )
