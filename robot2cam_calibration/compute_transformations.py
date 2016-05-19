@@ -26,13 +26,11 @@ a tool offset from correspondences.
 from __future__ import division
 import argparse
 import json
-
+from scipy.optimize import minimize
 import datetime
 import os
-
 import math
 import numpy as np
-
 import cv2
 
 def main():
@@ -56,17 +54,21 @@ def main():
                         help="File to save output to",
                         default="transformation.json")
 
-    parser.add_argument("--cam2rob", type=np.matrix,
+    parser.add_argument("--cam2rob", type=np.array,
                         help="Initial guess for the camera to robot transformation",
-                        default=np.identity(4))
+                        default=np.array([0,0,1,0,0,0]))
 
-    parser.add_argument("--tcp2target", type=np.matrix,
-                        help="Initial guess for the tcp to base transformation",
-                        default=np.identity(4))
+    parser.add_argument("--tcp2target", type=np.array,
+                        help="Initial guess for the tcp to target (robot tool)",
+                        default=np.array([0,.5,.5,0,0,0]))
 
-    parser.add_argument("--max_cam2rob", type=np.matrix,
+    parser.add_argument("--max_cam2rob", type=float,
                         help="Maximum deviation of the cam2robot transformation from the guess",
-                        default=np.matrix(''))
+                        default=5)
+
+    parser.add_argument("--max_tcp2target", type=float,
+                        help="Maximum deviation of the cam2target transformation from the guess",
+                        default=1)
 
     args = parser.parse_args()
 
@@ -75,10 +77,9 @@ def main():
         file_out=args.out,
         cam2rob_guess=args.cam2rob,
         tcp2target_guess=args.tcp2target,
-        max_cam2rob_deviation=args.max_cam2rob_deviation,
-        max_tcp2target_deviation=args.max_tcp2target_deviation
+        max_cam2rob_deviation=args.max_cam2rob,
+        max_tcp2target_deviation=args.max_tcp2target
     )
-
 
 # given n samples:
 def compute_transformation(correspondences, file_out, cam2rob_guess,
@@ -108,7 +109,7 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
                guess[8] + max_tcp2target_deviation),
               (-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)
               )
-    result = np.optimize.minimize(error, guess, args=(tcp2robot, camera2grid),
+    result = minimize(error, guess, args=(tcp2robot, camera2grid),
                                   bounds=bounds)
 
     # print("Tool Offset: {0}".format(G))
@@ -121,13 +122,21 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     #         result_json_file:
     #     json.dump(json_dict, result_json_file, indent=4)
 
+    json_dict = {"time": str(datetime.datetime.now()),
+                 "cam2robot": result.x[:6].tolist(),
+                 "tcp2target": result.x[6:].tolist()}
+
+    with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
+        json.dump(json_dict, result_json_file, indent=4)
+
 def error(guess, tcp2robot, camera2grid):
     """
     Calculates the difference between a guess at robot 2 cam transformations
     compared to gathered data.
 
     Args:
-        guess (nx12 array): Array of guesses of n samples. 6 dof camera 2 robot
+        guess (1x12 array): Input guess array. Values will range between the bounds
+                            passed in the optimize function. 6 dof camera 2 robot
                             (x,y,z,axis-angle), 6 dof tcp 2 target
                             (x,y,z,axis-angle)
         tcp2robot (nx6 array): Array of gathered data for the pose of the robot
@@ -139,13 +148,13 @@ def error(guess, tcp2robot, camera2grid):
              data
     """
     total_error = 0
-    for i in range(guess.shape[0]):
-        guess_cam2rob = vector2mat(guess[i,:6])
-        guess_tcp2rob = vector2mat(guess[i,6:])
-        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(tcp2robot[i]))
-        guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2rob)
-        total_error += sum(abs(
-            guess_cam2target-np.array(mat2vector(camera2grid))
+    for i in range(len(tcp2robot)):
+        guess_cam2rob = vector2mat(guess[:6])
+        guess_tcp2target = vector2mat(guess[6:])
+        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.array(tcp2robot[i])))
+        guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
+        total_error += abs(sum(
+            np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
         ))
 
     return total_error/guess.shape[0]
@@ -163,8 +172,8 @@ def vector2mat(vector):
     """
     transformation_matrix = np.zeros((4,4))
     transformation_matrix[3, 3] = 1
-    transformation_matrix[0:3] = vector[:3]
-    rotation_matrix, _, _ = cv2.Rodrigues(vector[3:])
+    transformation_matrix[0:3,3] = vector[:3]
+    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
     transformation_matrix[:3,:3] = rotation_matrix
     return transformation_matrix
 
@@ -178,9 +187,19 @@ def mat2vector(mat):
     """
     vector = [0]*6
     vector[:3] = mat[:3,3]
-    axis_angle, _, _ = cv2.Rodrigues(mat[:3,:3])
+    axis_angle, _ = cv2.Rodrigues(mat[:3,:3])
     vector[3:] = axis_angle
     return vector
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+    #main()
+
+correspondences = '..\examples\correspondences_29point.json'
+file_out = 'computed_transformations'
+cam2rob_guess = [0,0,1,0,0,0]
+tcp2target_guess = [0,.5,.5,0,0,0]
+max_cam2rob_deviation = 5000
+max_tcp2target_deviation = 1000
+compute_transformation(correspondences, file_out, cam2rob_guess,
+                       tcp2target_guess, max_cam2rob_deviation,
+                       max_tcp2target_deviation)
