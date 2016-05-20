@@ -110,7 +110,7 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
               (-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)
               )
     result = minimize(error, guess, args=(tcp2robot, camera2grid),
-                                  bounds=bounds)
+                                  bounds=bounds,method='L-BFGS-B')
 
     # print("Tool Offset: {0}".format(G))
     # print("Camera to Robot: {0}".format(R))
@@ -156,9 +156,13 @@ def error(guess, tcp2robot, camera2grid):
         guess_tcp2target = vector2mat(guess[6:])
         guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.array(tcp2robot[i])))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
-        total_error += abs(sum(
-            np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
-        ))
+        errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
+        for j in range(0,len(errorvec)):
+            total_error+=math.pow(errorvec[j],2)
+        total_error=math.sqrt(total_error)
+        # total_error += abs(sum(
+        #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
+        # ))
 
     return total_error/guess.shape[0]
 
@@ -189,7 +193,7 @@ def mat2vector(mat):
     Returns: A 6 element list, x,y,z,axis-angle
     """
     vector = [0]*6
-    vector[:3] = mat[:3,3]
+    vector[:3] = np.asarray(mat[:3,3])
     axis_angle, _ = cv2.Rodrigues(mat[:3,:3])
     vector[3:] = axis_angle
     return vector
@@ -197,10 +201,12 @@ def mat2vector(mat):
 #if __name__ == "__main__":
     #main()
 
-correspondences = '..\examples\correspondences_may10.json'
+correspondences = '../examples/correspondences_may10.json'
 file_out = 'computed_transformations_may10'
-cam2rob_guess = [0,0,0,178,724,1515]
-tcp2target_guess = [0,0,0,-206,-71,2]
+#cam2rob_guess = np.array([0.,0.,0.,0.,0.,0.])
+#tcp2target_guess = np.array([0.,0.,0.,0.,0.,0.])
+cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
+tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
 max_cam2rob_deviation = 2000
 max_tcp2target_deviation = 500
 compute_transformation(correspondences, file_out, cam2rob_guess,
