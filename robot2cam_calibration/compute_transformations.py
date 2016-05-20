@@ -123,8 +123,11 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     #     json.dump(json_dict, result_json_file, indent=4)
 
     json_dict = {"time": str(datetime.datetime.now()),
-                 "cam2robot": result.x[:6].tolist(),
-                 "tcp2target": result.x[6:].tolist()}
+                 "cam2robot": {"xyz-angle": result.x[:6].tolist(),
+                               "Tmatrix": vector2mat(result.x[:6]).tolist()},
+                 "tcp2target": {"xyz-angle": result.x[6:].tolist(),
+                                "Tmatrix": vector2mat(result.x[6:]).tolist()}
+                 }
 
     with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
@@ -194,12 +197,12 @@ def mat2vector(mat):
 #if __name__ == "__main__":
     #main()
 
-correspondences = '..\examples\correspondences_29point.json'
-file_out = 'computed_transformations'
-cam2rob_guess = [0,0,1,0,0,0]
-tcp2target_guess = [0,.5,.5,0,0,0]
-max_cam2rob_deviation = 5000
-max_tcp2target_deviation = 1000
+correspondences = '..\examples\correspondences_may10.json'
+file_out = 'computed_transformations_may10'
+cam2rob_guess = [0,0,0,178,724,1515]
+tcp2target_guess = [0,0,0,-206,-71,2]
+max_cam2rob_deviation = 2000
+max_tcp2target_deviation = 500
 compute_transformation(correspondences, file_out, cam2rob_guess,
                        tcp2target_guess, max_cam2rob_deviation,
                        max_tcp2target_deviation)
