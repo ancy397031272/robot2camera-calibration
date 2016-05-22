@@ -70,6 +70,14 @@ def main():
                         help="Maximum deviation of the cam2target transformation from the guess",
                         default=1)
 
+    parser.add_argument("--intrinsic", type=np.ndarray,
+                        help="Camera intrinsic matrix",
+                        default=np.identity(3))
+
+    parser.add_argument("--distortion", type=np.array,
+                        help="Camera distortion vector",
+                        default=np.array([0,0,0,0,0]))
+
     args = parser.parse_args()
 
     compute_transformation(
@@ -78,13 +86,15 @@ def main():
         cam2rob_guess=args.cam2rob,
         tcp2target_guess=args.tcp2target,
         max_cam2rob_deviation=args.max_cam2rob,
-        max_tcp2target_deviation=args.max_tcp2target
+        max_tcp2target_deviation=args.max_tcp2target,
+        intrinsic=args.intrinsic,
+        distortion=args.distortion
     )
 
 # given n samples:
 def compute_transformation(correspondences, file_out, cam2rob_guess,
                            tcp2target_guess, max_cam2rob_deviation,
-                           max_tcp2target_deviation):
+                           max_tcp2target_deviation,intrinsic,distortion):
     with open(correspondences, 'r') as correspondences_file:
         correspondences_dictionary = json.load(correspondences_file)
         write_time = correspondences_dictionary['time']
@@ -109,7 +119,7 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
                guess[8] + max_tcp2target_deviation),
               (-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)
               )
-    result = minimize(error, guess, args=(tcp2robot, camera2grid),
+    result = minimize(error, guess, args=(tcp2robot, camera2grid, intrinsic, distortion),
                                   bounds=bounds,method='L-BFGS-B')
 
     # print("Tool Offset: {0}".format(G))
@@ -132,7 +142,7 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
 
-def error(guess, tcp2robot, camera2grid):
+def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
     """
     Calculates the difference between a guess at robot 2 cam transformations
     compared to gathered data.
@@ -146,20 +156,34 @@ def error(guess, tcp2robot, camera2grid):
                                tool center point wrt. the robot coordinate base
         camera2grid (nx6 array): Array of gathered data for the transformation
                                  from the camera to the target
+        intrinsic (3x3 array): Camera intrinsic matrix
+
+        distortion (1x5 array): Camera distortion parameters
 
     Returns: A float, the average error between the guess and the collected
              data
     """
     total_error = 0
+    axis_length = 50
+    axis = np.float32([[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0],
+                       [0, 0, axis_length]]).reshape(-1, 3)
     for i in range(len(tcp2robot)):
         guess_cam2rob = vector2mat(guess[:6])
         guess_tcp2target = vector2mat(guess[6:])
         guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.array(tcp2robot[i])))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
-        errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
-        for j in range(0,len(errorvec)):
-            total_error+=math.pow(errorvec[j],2)
-        total_error=math.sqrt(total_error)
+        image_points, _ = cv2.projectPoints(axis, camera2grid[i,3:6], camera2grid[i,0:3],
+                                            intrinsic, distortion)
+        guess_cam2target = mat2vector(guess_cam2target)
+        guess_points, _ = cv2.projectPoints(axis, guess_cam2target[3:6], guess_cam2target[0:3],
+                                            intrinsic, distortion)
+        total_error+= abs(sum(image_points - guess_points))
+
+        # errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
+        # for j in range(0,len(errorvec)):
+        #     total_error+=math.pow(errorvec[j],2)
+        # total_error=math.sqrt(total_error)
+
         # total_error += abs(sum(
         #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
         # ))
