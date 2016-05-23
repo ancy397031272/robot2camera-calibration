@@ -70,11 +70,11 @@ def main():
                         help="Maximum deviation of the cam2target transformation from the guess",
                         default=1)
 
-    parser.add_argument("--intrinsic", type=np.ndarray,
+    parser.add_argument("--intrinsic", type=np.matrix,
                         help="Camera intrinsic matrix",
                         default=np.identity(3))
 
-    parser.add_argument("--distortion", type=np.array,
+    parser.add_argument("--distortion", type=np.ndarray,
                         help="Camera distortion vector",
                         default=np.array([0,0,0,0,0]))
 
@@ -164,20 +164,22 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
              data
     """
     total_error = 0
-    axis_length = 50
-    axis = np.float32([[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0],
-                       [0, 0, axis_length]]).reshape(-1, 3)
+    #Create arbitrary world points to project
+    test_points = np.array([[10.,20.,30.],[10.,30.,30.],[20.,20.,30.],[20.,10.,30.],[10.,10.,10.],[10.,30.,40.],[5.,25.,50.]])
     for i in range(len(tcp2robot)):
         guess_cam2rob = vector2mat(guess[:6])
         guess_tcp2target = vector2mat(guess[6:])
         guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.array(tcp2robot[i])))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
-        image_points, _ = cv2.projectPoints(axis, camera2grid[i,3:6], camera2grid[i,0:3],
+        image_points, _ = cv2.projectPoints(test_points, np.array(camera2grid[i][3:6]), np.array(camera2grid[i][0:3]),
                                             intrinsic, distortion)
         guess_cam2target = mat2vector(guess_cam2target)
-        guess_points, _ = cv2.projectPoints(axis, guess_cam2target[3:6], guess_cam2target[0:3],
+        guess_points, _ = cv2.projectPoints(test_points, np.array(guess_cam2target[3:6]), np.array(guess_cam2target[0:3]),
                                             intrinsic, distortion)
-        total_error+= abs(sum(image_points - guess_points))
+        #Take distance between projected points as error
+        for j in range (image_points.shape[0]):
+            total_error += math.sqrt(np.power(image_points[j][0][0] - guess_points[j][0][0], 2) +
+                                     np.power(image_points[j][0][1] - guess_points[j][0][1], 2))
 
         # errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
         # for j in range(0,len(errorvec)):
@@ -188,7 +190,8 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
         #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
         # ))
 
-    return total_error/guess.shape[0]
+    #return total_error/guess.shape[0]
+    return total_error
 
 def vector2mat(vector):
     """
@@ -225,6 +228,8 @@ def mat2vector(mat):
 #if __name__ == "__main__":
     #main()
 
+intrinsic = np.matrix([[2462.345193638386, 0.0, 1242.6269086495981],[0.0, 2463.6133832534606, 1014.3609261368764],[0, 0, 1]])
+distortion = np.array([-0.3954032063765203, 0.20971494160750948, 0.0008056336338866635, 9.237725225524615e-05, -0.06042030845477194])
 correspondences = '../examples/correspondences_may10.json'
 file_out = 'computed_transformations_may10'
 #cam2rob_guess = np.array([0.,0.,0.,0.,0.,0.])
@@ -235,4 +240,4 @@ max_cam2rob_deviation = 2000
 max_tcp2target_deviation = 500
 compute_transformation(correspondences, file_out, cam2rob_guess,
                        tcp2target_guess, max_cam2rob_deviation,
-                       max_tcp2target_deviation)
+                       max_tcp2target_deviation,intrinsic,distortion)
