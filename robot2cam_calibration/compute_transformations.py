@@ -169,7 +169,7 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
     for i in range(len(tcp2robot)):
         guess_cam2rob = vector2mat(guess[:6])
         guess_tcp2target = vector2mat(guess[6:])
-        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.array(tcp2robot[i])))
+        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.concatenate((1000*np.array(tcp2robot[i][:3]),np.array(tcp2robot[i][3:])))))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
         image_points, _ = cv2.projectPoints(test_points, np.array(camera2grid[i][3:6]), np.array(camera2grid[i][0:3]),
                                             intrinsic, distortion)
@@ -206,7 +206,12 @@ def vector2mat(vector):
     """
     transformation_matrix = np.zeros((4,4))
     transformation_matrix[3, 3] = 1
-    transformation_matrix[0:3,3] = vector[:3]
+    try:
+        transformation_matrix[0:3, 3] = vector[:3,0]
+    except:
+        transformation_matrix[0:3, 3] = vector[:3]
+    # mag = math.sqrt(math.pow(vector[3],2)+math.pow(vector[4],2)+math.pow(vector[5],2))
+    # norm = np.divide(np.array([vector[3],vector[4],vector[5]]), mag)
     rotation_matrix, _ = cv2.Rodrigues(vector[3:])
     transformation_matrix[:3,:3] = rotation_matrix
     return transformation_matrix
@@ -239,5 +244,13 @@ tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.018
 max_cam2rob_deviation = 2000
 max_tcp2target_deviation = 500
 compute_transformation(correspondences, file_out, cam2rob_guess,
-                       tcp2target_guess, max_cam2rob_deviation,
-                       max_tcp2target_deviation,intrinsic,distortion)
+                         tcp2target_guess, max_cam2rob_deviation,
+                         max_tcp2target_deviation,intrinsic,distortion)
+# guess = np.concatenate((cam2rob_guess, tcp2target_guess))
+# with open(correspondences, 'r') as correspondences_file:
+#     correspondences_dictionary = json.load(correspondences_file)
+#     write_time = correspondences_dictionary['time']
+#     tcp2robot = correspondences_dictionary['tcp2robot']  # nx6 array x,y,z,axis-angle
+#     camera2grid = correspondences_dictionary['camera2grid']  # nx6 array x,y,z,axis-angle
+# error_test = error(guess, tcp2robot, camera2grid, intrinsic, distortion)
+# print(error_test)
