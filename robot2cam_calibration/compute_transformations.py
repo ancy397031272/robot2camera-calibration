@@ -201,32 +201,24 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
              data
     """
     total_error = 0
-    # global counter
-    # print('error function called')
-    # counter += 1
+    ratio = .5
     for i in range(len(tcp2robot)):
         guess_cam2rob = vector2mat(guess[:6])
         guess_tcp2target = vector2mat(guess[6:])
         guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.concatenate((1000*np.array(tcp2robot[i][:3]),np.array(tcp2robot[i][3:])))))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
-        image_points, _ = cv2.projectPoints(test_points, np.array(camera2grid[i][3:6]), np.array(camera2grid[i][0:3]),
-                                            intrinsic, distortion)
-        guess_cam2target = mat2vector(guess_cam2target)
-        guess_points, _ = cv2.projectPoints(test_points, np.array(guess_cam2target[3:6]), np.array(guess_cam2target[0:3]),
-                                            intrinsic, distortion)
-        # Take distance between projected points as error
-        for j in range (image_points.shape[0]):
-            total_error += math.sqrt(np.power(image_points[j][0][0] - guess_points[j][0][0], 2) +
-                                     np.power(image_points[j][0][1] - guess_points[j][0][1], 2))
 
-        # errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
-        # for j in range(0,len(errorvec)):
-        #     total_error+=math.pow(errorvec[j],2)
-        # total_error=math.sqrt(total_error)
-
-        # total_error += abs(sum(
+        # total_error += sum(abs(
         #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
         # ))
+
+        manhattan_error = sum(abs(
+            np.array(guess_cam2target[:3,3]) - np.array(camera2grid[i][:3])
+        ))
+        angular_error = math.acos((np.trace(np.matmul(vector2mat(np.array(camera2grid[i]))[:3,:3].T,guess_cam2target[:3,:3]))-1)/2)
+
+        total_error += manhattan_error*ratio + angular_error*(1-ratio)
+
 
     # return total_error/guess.shape[0]
     return total_error
