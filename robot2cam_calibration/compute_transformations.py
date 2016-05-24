@@ -32,6 +32,7 @@ import os
 import math
 import numpy as np
 import cv2
+import random
 
 # global counter
 # counter = 0
@@ -59,11 +60,11 @@ def main():
 
     parser.add_argument("--cam2rob", type=float, nargs=6,
                         help="Initial guess for the camera to robot transformation",
-                        default=np.array([0,0,1,0,0,0]).tolist())
+                        default=np.array([0,0,1000,0,0,0]).tolist())
 
     parser.add_argument("--tcp2target", type=float, nargs=6,
                         help="Initial guess for the tcp to target (robot tool)",
-                        default=np.array([0,.5,.5,0,0,0]).tolist())
+                        default=np.array([0,0,0,0,0,0]).tolist())
 
     parser.add_argument("--max_cam2rob", type=float,
                         help="Maximum deviation of the cam2robot transformation from the guess",
@@ -135,8 +136,17 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
                        guess[2] - max_cam2rob_deviation, -np.pi, -np.pi, -np.pi, guess[6] - max_tcp2target_deviation,
                        guess[7] - max_tcp2target_deviation, guess[8] - max_tcp2target_deviation, -np.pi, -np.pi, -np.pi])
     bounds_tuple = [(low, high) for low, high in zip(bounds.xmin, bounds.xmax)]
-    minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion),"method":"L-BFGS-B", "bounds":bounds_tuple}
-    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback)
+    #Create arbitrary world points to project
+    test_points = np.zeros((30,3))
+    for i in range(test_points.shape[0]):
+        test_points[i][0] = random.randrange(-50, 50)
+        test_points[i][1] = random.randrange(-50, 50)
+        test_points[i][2] = random.randrange(-50, 50)
+    # define the new step taking routine and pass it to basinhopping
+    take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
+    minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion, test_points),"method":"L-BFGS-B", "bounds":bounds_tuple}
+    print('starting basinhopping')
+    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step)
                                   #finish=optimize.minimize, Ns=1)
 
     # print("Tool Offset: {0}".format(G))
@@ -169,7 +179,7 @@ class MyBounds(object):
         tmin = bool(np.all(x >= self.xmin))
         return tmax and tmin
 
-def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
+def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
     """
     Calculates the difference between a guess at robot 2 cam transformations
     compared to gathered data.
@@ -194,8 +204,6 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion):
     # global counter
     # print('error function called')
     # counter += 1
-    #Create arbitrary world points to project
-    test_points = np.array([[10.,20.,30.],[10.,30.,30.],[20.,20.,30.],[20.,10.,30.],[10.,10.,10.],[10.,30.,40.],[5.,25.,50.]])
     for i in range(len(tcp2robot)):
         guess_cam2rob = vector2mat(guess[:6])
         guess_tcp2target = vector2mat(guess[6:])
@@ -263,21 +271,41 @@ def mat2vector(mat):
     vector[3:] = axis_angle
     return vector
 
+class RandomDisplacementBounds(object):
+    """random displacement with bounds"""
+    def __init__(self, xmin, xmax, stepsize=0.5):
+        self.xmin = xmin
+        self.xmax = xmax
+        self.stepsize = stepsize
+
+    def __call__(self, x):
+        """take a random step but ensure the new position is within the bounds"""
+        print('generating points')
+        while True:
+            # this could be done in a much more clever way, but it will work for example purposes
+            xnew = x + np.multiply(np.random.uniform(-self.stepsize, self.stepsize, np.shape(x)),(self.xmax-self.xmin))
+            if np.all(xnew < self.xmax) and np.all(xnew > self.xmin):
+                break
+        print('finished generating points')
+        return xnew
+
+
+
 if __name__ == "__main__":
     main()
 
-intrinsic = np.matrix([[2462.345193638386, 0.0, 1242.6269086495981],[0.0, 2463.6133832534606, 1014.3609261368764],[0, 0, 1]])
-distortion = np.array([-0.3954032063765203, 0.20971494160750948, 0.0008056336338866635, 9.237725225524615e-05, -0.06042030845477194])
-correspondences = '../examples/correspondences_may10.json'
-file_out = 'computed_transformations_may10'
-#cam2rob_guess = np.array([0.,0.,0.,0.,0.,0.])
-#tcp2target_guess = np.array([0.,0.,0.,0.,0.,0.])
-cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
-tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
-max_cam2rob_deviation = 2000
-max_tcp2target_deviation = 500
-compute_transformation(correspondences, file_out,max_cam2rob_deviation=max_cam2rob_deviation,
-                                                                           max_tcp2target_deviation=max_tcp2target_deviation,intrinsic=intrinsic,distortion=distortion)
+# intrinsic = np.matrix([[2462.345193638386, 0.0, 1242.6269086495981],[0.0, 2463.6133832534606, 1014.3609261368764],[0, 0, 1]])
+# distortion = np.array([-0.3954032063765203, 0.20971494160750948, 0.0008056336338866635, 9.237725225524615e-05, -0.06042030845477194])
+# correspondences = '../examples/correspondences_may10.json'
+# file_out = 'computed_transformations_may10'
+# #cam2rob_guess = np.array([0.,0.,0.,0.,0.,0.])
+# #tcp2target_guess = np.array([0.,0.,0.,0.,0.,0.])
+# cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
+# tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
+# max_cam2rob_deviation = 2000
+# max_tcp2target_deviation = 500
+# compute_transformation(correspondences, file_out,max_cam2rob_deviation=max_cam2rob_deviation,
+#                                                                            max_tcp2target_deviation=max_tcp2target_deviation,intrinsic=intrinsic,distortion=distortion)
 # guess = np.concatenate((cam2rob_guess, tcp2target_guess))
 # with open(correspondences, 'r') as correspondences_file:
 #     correspondences_dictionary = json.load(correspondences_file)
