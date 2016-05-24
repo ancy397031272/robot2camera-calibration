@@ -144,9 +144,9 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
         test_points[i][2] = random.randrange(-50, 50)
     # define the new step taking routine and pass it to basinhopping
     take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
-    minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion, test_points),"method":"L-BFGS-B", "bounds":bounds_tuple}
+    minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion, test_points),"method":"SLSQP", "bounds":bounds_tuple}
     print('starting basinhopping')
-    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step)
+    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step,niter=1000,interval=10)
                                   #finish=optimize.minimize, Ns=1)
 
     # print("Tool Offset: {0}".format(G))
