@@ -146,7 +146,7 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
     minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion, test_points),"method":"SLSQP", "bounds":bounds_tuple}
     print('starting basinhopping')
-    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step,niter=1000,interval=10)
+    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step,niter=10,interval=5)
                                   #finish=optimize.minimize, Ns=1)
 
     # print("Tool Offset: {0}".format(G))
@@ -214,7 +214,7 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
         guess_cam2target = mat2vector(guess_cam2target)
         guess_points, _ = cv2.projectPoints(test_points, np.array(guess_cam2target[3:6]), np.array(guess_cam2target[0:3]),
                                             intrinsic, distortion)
-        #Take distance between projected points as error
+        # Take distance between projected points as error
         for j in range (image_points.shape[0]):
             total_error += math.sqrt(np.power(image_points[j][0][0] - guess_points[j][0][0], 2) +
                                      np.power(image_points[j][0][1] - guess_points[j][0][1], 2))

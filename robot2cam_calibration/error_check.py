@@ -1,3 +1,46 @@
+import numpy as np
+import cv2
+import math
+import random
+import json
+
+def vector2mat(vector):
+    """
+    Converts a vector in form x,y,z,axis-angle to a homogenous transformation
+    matrix
+
+    Args:
+        vector (6 element list): a vector representation form of a
+                                 transformation matrix. x,y,z,axis-angle
+
+    Returns: A 4x4 np.ndarry of the homogenous transformation matrix
+    """
+    transformation_matrix = np.zeros((4,4))
+    transformation_matrix[3, 3] = 1
+    try:
+        transformation_matrix[0:3, 3] = vector[:3,0]
+    except:
+        transformation_matrix[0:3, 3] = vector[:3]
+    # mag = math.sqrt(math.pow(vector[3],2)+math.pow(vector[4],2)+math.pow(vector[5],2))
+    # norm = np.divide(np.array([vector[3],vector[4],vector[5]]), mag)
+    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
+    transformation_matrix[:3,:3] = rotation_matrix
+    return transformation_matrix
+
+def mat2vector(mat):
+    """
+    Converts a transformatiion matrix into a 6 dof vector. x,y,z,axis-angle
+    Args:
+        mat (4x4 ndarray): the transformation matrix
+
+    Returns: A 6 element list, x,y,z,axis-angle
+    """
+    vector = [0]*6
+    vector[:3] = np.asarray(mat[:3,3])
+    axis_angle, _ = cv2.Rodrigues(mat[:3,:3])
+    vector[3:] = axis_angle
+    return vector
+
 def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
     """
     Calculates the difference between a guess at robot 2 cam transformations
@@ -49,7 +92,7 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
 
     # return total_error/guess.shape[0]
     return total_error
-
+#test_points = np.array([[10.,20.,30.]])
 test_points = np.zeros((30, 3))
 for i in range(test_points.shape[0]):
     test_points[i][0] = random.randrange(-50, 50)
@@ -58,11 +101,16 @@ for i in range(test_points.shape[0]):
 intrinsic = np.matrix([[2462.345193638386, 0.0, 1242.6269086495981],[0.0, 2463.6133832534606, 1014.3609261368764],[0, 0, 1]])
 distortion = np.array([-0.3954032063765203, 0.20971494160750948, 0.0008056336338866635, 9.237725225524615e-05, -0.06042030845477194])
 correspondences = '../examples/correspondences_may10.json'
-cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
-tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
+# cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
+# tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
+cam2rob_guess = np.array([1.54349198e+02, 7.47408195e+02, 1.46924939e+03, -1.07703900e+00, -2.49097316e+00, 2.47022147e+00])
+tcp2target_guess = np.array([ -1.95790490e+02, 1.10668527e+02, 4.45463951e+00, 3.12965547e+00, -9.51645893e-02, -5.73926109e-03])
 guess = np.concatenate((cam2rob_guess, tcp2target_guess))
 with open(correspondences, 'r') as correspondences_file:
     correspondences_dictionary = json.load(correspondences_file)
     write_time = correspondences_dictionary['time']
     tcp2robot = correspondences_dictionary['tcp2robot']  # nx6 array x,y,z,axis-angle
     camera2grid = correspondences_dictionary['camera2grid']  # nx6 array x,y,z,axis-angle
+
+result = error(guess,tcp2robot,camera2grid,intrinsic,distortion,test_points)
+print(result)
