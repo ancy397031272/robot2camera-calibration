@@ -208,10 +208,6 @@ def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
         guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.concatenate((1000*np.array(tcp2robot[i][:3]),np.array(tcp2robot[i][3:])))))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
 
-        # total_error += sum(abs(
-        #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
-        # ))
-
         manhattan_error = sum(abs(
             np.array(guess_cam2target[:3,3]) - np.array(camera2grid[i][:3])
         ))
