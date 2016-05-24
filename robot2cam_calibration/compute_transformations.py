@@ -26,14 +26,16 @@ a tool offset from correspondences.
 from __future__ import division
 import argparse
 import json
-
+from scipy import optimize
 import datetime
 import os
-
 import math
 import numpy as np
-
 import cv2
+import random
+
+# global counter
+# counter = 0
 
 def main():
     """
@@ -56,24 +58,51 @@ def main():
                         help="File to save output to",
                         default="transformation.json")
 
-    parser.add_argument("--")
+    parser.add_argument("--cam2rob", type=float, nargs=6,
+                        help="Initial guess for the camera to robot transformation",
+                        default=np.array([0,0,1000,0,0,0]).tolist())
+
+    parser.add_argument("--tcp2target", type=float, nargs=6,
+                        help="Initial guess for the tcp to target (robot tool)",
+                        default=np.array([0,0,0,0,0,0]).tolist())
+
+    parser.add_argument("--max_cam2rob", type=float,
+                        help="Maximum deviation of the cam2robot transformation from the guess",
+                        default=2000)
+
+    parser.add_argument("--max_tcp2target", type=float,
+                        help="Maximum deviation of the cam2target transformation from the guess",
+                        default=500)
+
+    parser.add_argument("--intrinsic", type=float, nargs=9,
+                        help="Camera intrinsic matrix",
+                        default=np.identity(3).tolist())
+
+    parser.add_argument("--distortion", type=float, nargs='+',
+                        help="Camera distortion vector",
+                        default=np.array([0,0,0,0,0]).tolist())
 
     args = parser.parse_args()
+
+    intrinsic = np.array(args.intrinsic)
+    intrinsic = intrinsic.reshape((3,3))
+    distortion = np.array(args.distortion)
 
     compute_transformation(
         correspondences=args.correspondences,
         file_out=args.out,
-        am2rob_guess=args.arm2rob_guess,
-        tcp2target_guess=args.tcp2targ_guess,
-        max_cam2rob_deviation=args.max_cam2rob_deviation,
-        max_tcp2target_deviation=args.max_tcp2target_deviation
+        cam2rob_guess=args.cam2rob,
+        tcp2target_guess=args.tcp2target,
+        max_cam2rob_deviation=args.max_cam2rob,
+        max_tcp2target_deviation=args.max_tcp2target,
+        intrinsic=intrinsic,
+        distortion=distortion
     )
-
 
 # given n samples:
 def compute_transformation(correspondences, file_out, cam2rob_guess,
                            tcp2target_guess, max_cam2rob_deviation,
-                           max_tcp2target_deviation):
+                           max_tcp2target_deviation,intrinsic,distortion):
     with open(correspondences, 'r') as correspondences_file:
         correspondences_dictionary = json.load(correspondences_file)
         write_time = correspondences_dictionary['time']
@@ -81,25 +110,44 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
         camera2grid = correspondences_dictionary['camera2grid'] #nx6 array x,y,z,axis-angle
         print("Loaded data from {}".format(write_time))
 
+    intrinsic=np.array(intrinsic)
+    distortion=np.array(distortion)
     #optimize
     guess = np.concatenate((cam2rob_guess, tcp2target_guess))
-    bounds = ((guess[0] - max_cam2rob_deviation,
-               guess[0] + max_cam2rob_deviation),
-              (guess[1] - max_cam2rob_deviation,
-               guess[1] + max_cam2rob_deviation),
-              (guess[2] - max_cam2rob_deviation,
-               guess[2] + max_cam2rob_deviation),
-              (-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi),
-              (guess[6] - max_tcp2target_deviation,
-               guess[6] + max_tcp2target_deviation),
-              (guess[7] - max_tcp2target_deviation,
-               guess[7] + max_tcp2target_deviation),
-              (guess[8] - max_tcp2target_deviation,
-               guess[8] + max_tcp2target_deviation),
-              (-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)
-              )
-    result = np.optimize.minimize(error, guess, args=(tcp2robot, camera2grid),
-                                  bounds=bounds)
+    # bounds = (slice(guess[0] - max_cam2rob_deviation,
+    #            guess[0] + max_cam2rob_deviation,100),
+    #           slice(guess[1] - max_cam2rob_deviation,
+    #            guess[1] + max_cam2rob_deviation,100),
+    #           slice(guess[2] - max_cam2rob_deviation,
+    #            guess[2] + max_cam2rob_deviation,100),
+    #           slice(-np.pi, np.pi,np.pi/15), slice(-np.pi, np.pi,np.pi/15), slice(-np.pi, np.pi,np.pi/15),
+    #           slice(guess[6] - max_tcp2target_deviation,
+    #            guess[6] + max_tcp2target_deviation,100),
+    #           slice(guess[7] - max_tcp2target_deviation,
+    #            guess[7] + max_tcp2target_deviation,100),
+    #           slice(guess[8] - max_tcp2target_deviation,
+    #            guess[8] + max_tcp2target_deviation,100),
+    #           slice(-np.pi, np.pi,np.pi/15), slice(-np.pi, np.pi,np.pi/15), slice(-np.pi, np.pi,np.pi/15)
+    #           )
+    bounds = MyBounds([guess[0] + max_cam2rob_deviation, guess[1] + max_cam2rob_deviation,
+                       guess[2] + max_cam2rob_deviation, np.pi, np.pi, np.pi, guess[6] + max_tcp2target_deviation,
+                       guess[7] + max_tcp2target_deviation, guess[8] + max_tcp2target_deviation, np.pi, np.pi, np.pi],
+                      [guess[0] - max_cam2rob_deviation, guess[1] - max_cam2rob_deviation,
+                       guess[2] - max_cam2rob_deviation, -np.pi, -np.pi, -np.pi, guess[6] - max_tcp2target_deviation,
+                       guess[7] - max_tcp2target_deviation, guess[8] - max_tcp2target_deviation, -np.pi, -np.pi, -np.pi])
+    bounds_tuple = [(low, high) for low, high in zip(bounds.xmin, bounds.xmax)]
+    #Create arbitrary world points to project
+    test_points = np.zeros((30,3))
+    for i in range(test_points.shape[0]):
+        test_points[i][0] = random.randrange(-50, 50)
+        test_points[i][1] = random.randrange(-50, 50)
+        test_points[i][2] = random.randrange(-50, 50)
+    # define the new step taking routine and pass it to basinhopping
+    take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
+    minimizer_kwargs = {"args":(tcp2robot, camera2grid, intrinsic, distortion, test_points),"method":"SLSQP", "bounds":bounds_tuple}
+    print('starting basinhopping')
+    result = optimize.basinhopping(func=error, x0=guess, minimizer_kwargs=minimizer_kwargs, accept_test=bounds, disp=True, callback=callback,take_step=take_step,niter=10,interval=5)
+                                  #finish=optimize.minimize, Ns=1)
 
     # print("Tool Offset: {0}".format(G))
     # print("Camera to Robot: {0}".format(R))
@@ -111,34 +159,77 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     #         result_json_file:
     #     json.dump(json_dict, result_json_file, indent=4)
 
-def error(guess, tcp2robot, camera2grid):
+    json_dict = {"time": str(datetime.datetime.now()),
+                 "cam2robot": {"xyz-angle": result.x[:6].tolist(),
+                               "Tmatrix": vector2mat(result.x[:6]).tolist()},
+                 "tcp2target": {"xyz-angle": result.x[6:].tolist(),
+                                "Tmatrix": vector2mat(result.x[6:]).tolist()}
+                 }
+
+    with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
+        json.dump(json_dict, result_json_file, indent=4)
+
+class MyBounds(object):
+    def __init__(self, xmax, xmin):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+def error(guess, tcp2robot, camera2grid,intrinsic,distortion,test_points):
     """
     Calculates the difference between a guess at robot 2 cam transformations
     compared to gathered data.
 
     Args:
-        guess (nx12 array): Array of guesses of n samples. 6 dof camera 2 robot
+        guess (1x12 array): Input guess array. Values will range between the bounds
+                            passed in the optimize function. 6 dof camera 2 robot
                             (x,y,z,axis-angle), 6 dof tcp 2 target
                             (x,y,z,axis-angle)
         tcp2robot (nx6 array): Array of gathered data for the pose of the robot
                                tool center point wrt. the robot coordinate base
         camera2grid (nx6 array): Array of gathered data for the transformation
                                  from the camera to the target
+        intrinsic (3x3 array): Camera intrinsic matrix
+
+        distortion (1x5 array): Camera distortion parameters
 
     Returns: A float, the average error between the guess and the collected
              data
     """
     total_error = 0
-    for i in range(guess.shape[0]):
-        guess_cam2rob = vector2mat(guess[i,:6])
-        guess_tcp2rob = vector2mat(guess[i,6:])
-        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(tcp2robot[i]))
-        guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2rob)
-        total_error += sum(abs(
-            guess_cam2target-np.array(mat2vector(camera2grid))
-        ))
+    # global counter
+    # print('error function called')
+    # counter += 1
+    for i in range(len(tcp2robot)):
+        guess_cam2rob = vector2mat(guess[:6])
+        guess_tcp2target = vector2mat(guess[6:])
+        guess_cam2tcp = np.matmul(guess_cam2rob, vector2mat(np.concatenate((1000*np.array(tcp2robot[i][:3]),np.array(tcp2robot[i][3:])))))
+        guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
+        image_points, _ = cv2.projectPoints(test_points, np.array(camera2grid[i][3:6]), np.array(camera2grid[i][0:3]),
+                                            intrinsic, distortion)
+        guess_cam2target = mat2vector(guess_cam2target)
+        guess_points, _ = cv2.projectPoints(test_points, np.array(guess_cam2target[3:6]), np.array(guess_cam2target[0:3]),
+                                            intrinsic, distortion)
+        # Take distance between projected points as error
+        for j in range (image_points.shape[0]):
+            total_error += math.sqrt(np.power(image_points[j][0][0] - guess_points[j][0][0], 2) +
+                                     np.power(image_points[j][0][1] - guess_points[j][0][1], 2))
 
-    return total_error/guess.shape[0]
+        # errorvec = np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
+        # for j in range(0,len(errorvec)):
+        #     total_error+=math.pow(errorvec[j],2)
+        # total_error=math.sqrt(total_error)
+
+        # total_error += abs(sum(
+        #     np.array(mat2vector(guess_cam2target))-np.array(camera2grid[i])
+        # ))
+
+    # return total_error/guess.shape[0]
+    return total_error
 
 def vector2mat(vector):
     """
@@ -153,10 +244,18 @@ def vector2mat(vector):
     """
     transformation_matrix = np.zeros((4,4))
     transformation_matrix[3, 3] = 1
-    transformation_matrix[0:3] = vector[:3]
-    rotation_matrix, _, _ = cv2.Rodrigues(vector[3:])
+    try:
+        transformation_matrix[0:3, 3] = vector[:3,0]
+    except:
+        transformation_matrix[0:3, 3] = vector[:3]
+    # mag = math.sqrt(math.pow(vector[3],2)+math.pow(vector[4],2)+math.pow(vector[5],2))
+    # norm = np.divide(np.array([vector[3],vector[4],vector[5]]), mag)
+    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
     transformation_matrix[:3,:3] = rotation_matrix
     return transformation_matrix
+
+def callback(x, f, accept):
+    print(x)
 
 def mat2vector(mat):
     """
@@ -167,10 +266,51 @@ def mat2vector(mat):
     Returns: A 6 element list, x,y,z,axis-angle
     """
     vector = [0]*6
-    vector[:3] = mat[:3,3]
-    axis_angle, _, _ = cv2.Rodrigues(mat[:3,:3])
+    vector[:3] = np.asarray(mat[:3,3])
+    axis_angle, _ = cv2.Rodrigues(mat[:3,:3])
     vector[3:] = axis_angle
     return vector
 
+class RandomDisplacementBounds(object):
+    """random displacement with bounds"""
+    def __init__(self, xmin, xmax, stepsize=0.5):
+        self.xmin = xmin
+        self.xmax = xmax
+        self.stepsize = stepsize
+
+    def __call__(self, x):
+        """take a random step but ensure the new position is within the bounds"""
+        print('generating points')
+        while True:
+            # this could be done in a much more clever way, but it will work for example purposes
+            xnew = x + np.multiply(np.random.uniform(-self.stepsize, self.stepsize, np.shape(x)),(self.xmax-self.xmin))
+            if np.all(xnew < self.xmax) and np.all(xnew > self.xmin):
+                break
+        print('finished generating points')
+        return xnew
+
+
+
 if __name__ == "__main__":
     main()
+
+# intrinsic = np.matrix([[2462.345193638386, 0.0, 1242.6269086495981],[0.0, 2463.6133832534606, 1014.3609261368764],[0, 0, 1]])
+# distortion = np.array([-0.3954032063765203, 0.20971494160750948, 0.0008056336338866635, 9.237725225524615e-05, -0.06042030845477194])
+# correspondences = '../examples/correspondences_may10.json'
+# file_out = 'computed_transformations_may10'
+# #cam2rob_guess = np.array([0.,0.,0.,0.,0.,0.])
+# #tcp2target_guess = np.array([0.,0.,0.,0.,0.,0.])
+# cam2rob_guess = mat2vector(np.matrix([[-.7152,.6985,-.0243,178.2],[.0412,.0074,-.9991,724.3],[-.6978,-.7155,-.0341,1515.7],[0.,0.,0.,1.]]))
+# tcp2target_guess = mat2vector(np.matrix([[.0189,.9998,.0049,-206.5],[.9998,-.0189,-.0027,-71.1],[-.0026,.005,-1.,2.5],[0.,0.,0.,1.]]))
+# max_cam2rob_deviation = 2000
+# max_tcp2target_deviation = 500
+# compute_transformation(correspondences, file_out,max_cam2rob_deviation=max_cam2rob_deviation,
+#                                                                            max_tcp2target_deviation=max_tcp2target_deviation,intrinsic=intrinsic,distortion=distortion)
+# guess = np.concatenate((cam2rob_guess, tcp2target_guess))
+# with open(correspondences, 'r') as correspondences_file:
+#     correspondences_dictionary = json.load(correspondences_file)
+#     write_time = correspondences_dictionary['time']
+#     tcp2robot = correspondences_dictionary['tcp2robot']  # nx6 array x,y,z,axis-angle
+#     camera2grid = correspondences_dictionary['camera2grid']  # nx6 array x,y,z,axis-angle
+# error_test = error(guess, tcp2robot, camera2grid, intrinsic, distortion)
+# print(error_test)
