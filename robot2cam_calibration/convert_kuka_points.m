@@ -6,9 +6,15 @@ function [ result ] = convert_kuka_points( kukapoints )
 
 result = zeros(size(kukapoints,1),6);
 result(:,1:3)=kukapoints(:,1:3);
-result(:,4)=kukapoints(:,6);
-result(:,5)=kukapoints(:,5);
-result(:,6)=kukapoints(:,4);
+
+euls = kukapoints(:,4:6);
+rotms = eul2rotm(euls);
+axangs = rotm2axang(rotms);
+rvecs = zeros(size(axangs,1),3);
+for i = 1:size(axangs,1)
+    rvecs(i,:) = axangs(i,1:3)*axangs(i,4);
+end
+result(:,4:6) = rvecs;
 
 end
 
