@@ -1,5 +1,7 @@
-"""A file to move a robot with a grid and save correspondences between camera
-and robot pose for future processing.
+"""A file to move a UR robot with a grid and save correspondences between
+camera and robot pose for future processing.
+
+todo: generalize this to other robot types
 """
 
 # The MIT License (MIT)
@@ -13,8 +15,8 @@ and robot pose for future processing.
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -70,8 +72,8 @@ def main():
 
     parser.add_argument("--calibration", type=str,
                         help="The filename of the camera calibration "
-                             "information. This file can be generated using the"
-                             "`calibrate-camera` command from the "
+                             "information. This file can be generated using "
+                             "the`calibrate-camera` command from the "
                              "camera-calibration toolbox.",
                         required=True)
 
@@ -107,13 +109,14 @@ def main():
     )
 
 
-def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
-                        robot_address, robot_port, file_out):
+def get_correspondences(robot_samples, calibration, rows, cols, spacing,
+                        camera, robot_address, robot_port, file_out):
     """
     Gets correspondences between a camera and UR Robot with a grid attached.
     Relies on pre-trained points to direct robot motion. Will try to find the
-    grid 5 times per position. Generates a json file with all of the data needed
-    to then calculate the tool offset and the camera to robot transformation.
+    grid 5 times per position. Generates a json file with all of the data
+    needed o then calculate the tool offset and the camera to robot
+    transformation.
 
     Args:
         robot_samples (str): The filename for the file containing the list of
@@ -182,7 +185,8 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing, camera,
                  "calibration": calibration,
                  "tcp2robot": tcp2robot,
                  "camera2grid": camera2grid}
-    with open(os.path.splitext(file_out)[0] + '.json', 'w') as result_json_file:
+    with open(os.path.splitext(file_out)[0] + '.json', 'w') as \
+            result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
 
 if __name__ == '__main__':
