@@ -1,4 +1,7 @@
-"""A file to move a robot with a grid and save images and robot pose for future processing.
+"""A file to move a UR robot with a grid and save images and robot pose for
+future processing.
+
+todo: generalize this to any robot type
 """
 
 # The MIT License (MIT)
@@ -12,8 +15,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -145,8 +148,10 @@ def get_images_poses(robot_samples, cam_name,
 
     json_dict = {"time": str(datetime.datetime.now()),
                  "tcp2robot": tcp2robot}
-    with open(os.path.join(folder_out, os.path.splitext(file_out)[0] + '.json'),
-              'w') as result_json_file:
+    with open(
+            os.path.join(folder_out,
+                         os.path.splitext(file_out)[0] + '.json'), 'w') as \
+            result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
 
 if __name__ == '__main__':
