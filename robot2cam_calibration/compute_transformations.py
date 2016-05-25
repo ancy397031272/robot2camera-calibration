@@ -13,8 +13,8 @@ a tool offset from correspondences.
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -23,19 +23,15 @@ a tool offset from correspondences.
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import division
 import argparse
 import json
-
+from scipy import optimize
 import datetime
 import os
-
 import math
 import numpy as np
-
 import cv2
-
-from quaternions import Quaternion
-from dual_quaternions import DualQuaternion
 
 
 def main():
@@ -59,130 +55,271 @@ def main():
                         help="File to save output to",
                         default="transformation.json")
 
+    parser.add_argument("--cam2rob", type=float, nargs=6,
+                        help="Initial guess for the camera to robot "
+                             "transformation",
+                        default=np.array([0, 0, 1000, 0, 0, 0]).tolist())
+
+    parser.add_argument("--tcp2target", type=float, nargs=6,
+                        help="Initial guess for the tcp to target "
+                             "(robot tool)",
+                        default=np.array([0, 0, 0, 0, 0, 0]).tolist())
+
+    parser.add_argument("--max_cam2rob", type=float,
+                        help="Maximum deviation of the cam2robot "
+                             "transformation from the guess",
+                        default=2000)
+
+    parser.add_argument("--max_tcp2target", type=float,
+                        help="Maximum deviation of the cam2target "
+                             "transformation from the guess",
+                        default=500)
+
     args = parser.parse_args()
 
     compute_transformation(
         correspondences=args.correspondences,
-        file_out=args.out
+        file_out=args.out,
+        cam2rob_guess=args.cam2rob,
+        tcp2target_guess=args.tcp2target,
+        max_cam2rob_deviation=args.max_cam2rob,
+        max_tcp2target_deviation=args.max_tcp2target,
     )
 
 
-def compute_transformation(correspondences, file_out):
+def compute_transformation(correspondences, file_out, cam2rob_guess,
+                           tcp2target_guess, max_cam2rob_deviation,
+                           max_tcp2target_deviation):
+    """Computes the camera to robot base and tcp to target (flange to tcp in
+    some cases) transformations. Uses matched coorespondences of
+    transformations from the camera to a fixed point past the final robot axis
+    (for example a grid or other marker) and the robot base to tcp
+    transformation.
+
+    Args:
+        correspondences (string): The filename of the correspondences file.
+                                  This file should be a json file with fields:
+                                  'time', 'tcp2robot', 'camera2grid'.
+                                  'tcp2robot' and 'camera2grid' should be lists
+                                  of lists, with each individual list being a
+                                  Rodrigues vector
+                                  (x,y,z,3 element rotation vector/axis-angle)
+        file_out (string): The name of the file to be output (no extension)
+        cam2rob_guess (6 element list): The Rodrigues vector for the initial
+                                        guess of the camera to robot
+                                        transformation
+        tcp2target_guess (6 element list): The Rodrigues vector for the initial
+                                           guess of the tcp to target
+                                           transformation
+        max_cam2rob_deviation (float): The x,y,z range around the initial
+                                       camera to robot guess which should be
+                                       searched.
+        max_tcp2target_deviation (float): The x,y,z range around the initial
+                                          camera to target guess which should
+                                          be searched.
+
+    Returns: The results as a dictionary
+    """
     with open(correspondences, 'r') as correspondences_file:
         correspondences_dictionary = json.load(correspondences_file)
         write_time = correspondences_dictionary['time']
+        # nx6 arrays x,y,z,axis-angle:
         tcp2robot = correspondences_dictionary['tcp2robot']
         camera2grid = correspondences_dictionary['camera2grid']
         print("Loaded data from {}".format(write_time))
 
-    data = np.zeros((len(tcp2robot)*8, 16))
-    for i in range(0, len(tcp2robot)):
-        c_raw = camera2grid[i]
-        (c_rot_mat, _) = cv2.Rodrigues(np.array(c_raw[3:]))
-        #Calculate rotation matrix from rodrigues values
-        c_rot_quat = Quaternion.from_matrix(c_rot_mat)
-        c_trans_quat = Quaternion.from_translation(c_raw[:3])
-        c = DualQuaternion(c_rot_quat, c_trans_quat)
-
-        t_raw = tcp2robot[i]
-        angle = math.sqrt(math.pow(t_raw[3], 2) + math.pow(t_raw[4], 2) +
-                          math.pow(t_raw[5], 2))
-        t_rot = Quaternion.from_axis_angle(t_raw[3:], angle)
-        t_trans = Quaternion.from_translation(t_raw[:3])
-        t = DualQuaternion(t_rot, t_trans)
-        t = t.conjugate_reverse()
-
-        data[i*8: (i+1)*8] = np.array([
-            [c.real.w*t.real.w+c.real.x*t.real.x+c.real.y*t.real.y+c.real.z*t.real.z,
-            -c.real.x*t.real.w+c.real.w*t.real.x+c.real.z*t.real.y-c.real.y*t.real.z,
-            -c.real.y*t.real.w-c.real.z*t.real.x+c.real.w*t.real.y+c.real.x*t.real.z,
-            -c.real.z*t.real.w+c.real.y*t.real.x-c.real.x*t.real.y+c.real.w*t.real.z,
-            0,0,0,0,-1,0,0,0,0,0,0,0],
-            [-c.real.z*t.real.w+c.real.y*t.real.x+c.real.x*t.real.y-c.real.w*t.real.z,
-            c.real.y*t.real.w+c.real.z*t.real.x+c.real.w*t.real.y+c.real.x*t.real.z,
-            c.real.x*t.real.w-c.real.w*t.real.x+c.real.z*t.real.y-c.real.y*t.real.z,
-            c.real.w*t.real.w+c.real.x*t.real.x-c.real.y*t.real.y-c.real.z*t.real.z,
-            0,0,0,0,0,-1,0,0,0,0,0,0],
-            [c.real.y*t.real.w-c.real.z*t.real.x-c.real.w*t.real.y+c.real.x*t.real.z,
-            c.real.z*t.real.w+c.real.y*t.real.x+c.real.x*t.real.y+c.real.w*t.real.z,
-            c.real.w*t.real.w-c.real.x*t.real.x+c.real.y*t.real.y-c.real.z*t.real.z,
-            -c.real.x*t.real.w-c.real.w*t.real.x+c.real.z*t.real.y+c.real.y*t.real.z,
-            0,0,0,0,0,0,-1,0,0,0,0,0],
-            [c.real.z*t.real.w+c.real.y*t.real.x-c.real.x*t.real.y-c.real.w*t.real.z,
-            -c.real.y*t.real.w+c.real.z*t.real.x-c.real.w*t.real.y+c.real.x*t.real.z,
-            c.real.x*t.real.w+c.real.w*t.real.x+c.real.z*t.real.y+c.real.y*t.real.z,
-            c.real.w*t.real.w-c.real.x*t.real.x-c.real.y*t.real.y+c.real.z*t.real.z,
-            0,0,0,0,0,0,0,-1,0,0,0,0],
-            [c.real.w*t.dual.w+c.real.x*t.dual.x+c.real.y*t.dual.y+c.real.z*t.dual.z+
-                c.dual.w*t.real.w+c.dual.x*t.real.x+c.dual.y*t.real.y+c.dual.z*t.real.z,
-            -c.real.x*t.dual.w+c.real.w*t.dual.x+c.real.z*t.dual.y-c.real.y*t.dual.z-
-                c.dual.x*t.real.w+c.dual.w*t.real.x+c.dual.z*t.real.y-c.dual.y*t.real.z,
-            -c.real.y*t.dual.w-c.real.z*t.dual.x+c.real.w*t.dual.y+c.real.x*t.dual.z-
-                c.dual.y*t.real.w-c.dual.z*t.real.x+c.dual.w*t.real.y+c.dual.x*t.real.z,
-            -c.real.z*t.dual.w+c.real.y*t.dual.x-c.real.x*t.dual.y+c.real.w*t.dual.z-
-                c.dual.z*t.real.w+c.dual.y*t.real.x-c.dual.x*t.real.y+c.dual.w*t.real.z,
-            c.real.w*t.real.w+c.real.x*t.real.x+c.real.y*t.real.y+c.real.z*t.real.z,
-            -c.real.x*t.real.w+c.real.w*t.real.x+c.real.z*t.real.y-c.real.y*t.real.z,
-            -c.real.y*t.real.w-c.real.z*t.real.x+c.real.w*t.real.y+c.real.x*t.real.z,
-            -c.real.z*t.real.w+c.real.y*t.real.x-c.real.x*t.real.y+c.real.w*t.real.z,
-            0,0,0,0,-1,0,0,0],
-            [c.real.x*t.dual.w-c.real.w*t.dual.x+c.real.z*t.dual.y-c.real.y*t.dual.z+
-                c.dual.x*t.real.w-c.dual.w*t.real.x+c.dual.z*t.real.y-c.dual.y*t.real.z,
-            c.real.w*t.dual.w+c.real.x*t.dual.x-c.real.y*t.dual.y-c.real.z*t.dual.z+
-                c.dual.w*t.real.w+c.dual.x*t.real.x-c.dual.y*t.real.y-c.dual.z*t.real.z,
-            -c.real.z*t.dual.w+c.real.y*t.dual.x+c.real.x*t.dual.y-c.real.w*t.dual.z-
-                c.dual.z*t.real.w+c.dual.y*t.real.x+c.dual.x*t.real.y-c.dual.w*t.real.z,
-            c.real.y*t.dual.w+c.real.z*t.dual.x+c.real.w*t.dual.y+c.real.x*t.dual.z+
-                c.dual.y*t.real.w+c.dual.z*t.real.x+c.dual.w*t.real.y+c.dual.x*t.real.z,
-            c.real.x*t.real.w-c.real.w*t.real.x+c.real.z*t.real.y-c.real.y*t.real.z,
-            c.real.w*t.real.w+c.real.x*t.real.x-c.real.y*t.real.y-c.real.z*t.real.z,
-            -c.real.z*t.real.w+c.real.y*t.real.x+c.real.x*t.real.y-c.real.w*t.real.z,
-            c.real.y*t.real.w+c.real.z*t.real.x+c.real.w*t.real.y+c.real.x*t.real.z,
-            0,0,0,0,0,-1,0,0],
-            [c.real.y*t.dual.w-c.real.z*t.dual.x-c.real.w*t.dual.y+c.real.x*t.dual.z+
-                c.dual.y*t.real.w-c.dual.z*t.real.x-c.dual.w*t.real.y+c.dual.x*t.real.z,
-            c.real.z*t.dual.w+c.real.y*t.dual.x+c.real.x*t.dual.y+c.real.w*t.dual.z+
-                c.dual.z*t.real.w+c.dual.y*t.real.x+c.dual.x*t.real.y+c.dual.w*t.real.z,
-            c.real.w*t.dual.w-c.real.x*t.dual.x+c.real.y*t.dual.y-c.real.z*t.dual.z+
-                c.dual.w*t.real.w-c.dual.x*t.real.x+c.dual.y*t.real.y-c.dual.z*t.real.z,
-            -c.real.x*t.dual.w-c.real.w*t.dual.x+c.real.z*t.dual.y+c.real.y*t.dual.z-
-                c.dual.x*t.real.w-c.dual.w*t.real.x+c.dual.z*t.real.y+c.dual.y*t.real.z,
-            c.real.y*t.real.w-c.real.z*t.real.x-c.real.w*t.real.y+c.real.x*t.real.z,
-            c.real.z*t.real.w+c.real.y*t.real.x+c.real.x*t.real.y+c.real.w*t.real.z,
-            c.real.w*t.real.w-c.real.x*t.real.x+c.real.y*t.real.y-c.real.z*t.real.z,
-            -c.real.x*t.real.w-c.real.w*t.real.x+c.real.z*t.real.y+c.real.y*t.real.z,
-            0,0,0,0,0,0,-1,0],
-            [c.real.z*t.dual.w+c.real.y*t.dual.x-c.real.x*t.dual.y-c.real.w*t.dual.z+
-                c.dual.z*t.real.w+c.dual.y*t.real.x-c.dual.x*t.real.y-c.dual.w*t.real.z,
-            -c.real.y*t.dual.w+c.real.z*t.dual.x-c.real.w*t.dual.y+c.real.x*t.dual.z-
-                c.dual.y*t.real.w+c.dual.z*t.real.x-c.dual.w*t.real.y+c.dual.x*t.real.z,
-            c.real.x*t.dual.w+c.real.w*t.dual.x+c.real.z*t.dual.y+c.real.y*t.dual.z+
-                c.dual.x*t.real.w+c.dual.w*t.real.x+c.dual.z*t.real.y+c.dual.y*t.real.z,
-            c.real.w*t.dual.w-c.real.x*t.dual.x-c.real.y*t.dual.y+c.real.z*t.dual.z+
-                c.dual.w*t.real.w-c.dual.x*t.real.x-c.dual.y*t.real.y+c.dual.z*t.real.z,
-            c.real.z*t.real.w+c.real.y*t.real.x-c.real.x*t.real.y-c.real.w*t.real.z,
-            -c.real.y*t.real.w+c.real.z*t.real.x-c.real.w*t.real.y+c.real.x*t.real.z,
-            c.real.x*t.real.w+c.real.w*t.real.x+c.real.z*t.real.y+c.real.y*t.real.z,
-            c.real.w*t.real.w-c.real.x*t.real.x-c.real.y*t.real.y+c.real.z*t.real.z,
-            0, 0, 0, 0, 0, 0, 0, -1]
-            ])
-
-    result = np.linalg.lstsq(data, np.zeros(data.shape[0]))
-
-    G = dquat(result[0, 0], result[1, 0], result[2, 0], result[3, 0],
-              result[4, 0], result[5, 0], result[6, 0], result[7, 0])
-    R = dquat(result[8, 0], result[9, 0], result[10, 0], result[11, 0],
-              result[12, 0], result[13, 0], result[14, 0], result[15, 0])
-
-    print("Tool Offset: {0}".format(G))
-    print("Camera to Robot: {0}".format(R))
+    #optimize
+    guess = np.concatenate((cam2rob_guess, tcp2target_guess))
+    bounds = Bounds([guess[0] + max_cam2rob_deviation,
+                     guess[1] + max_cam2rob_deviation,
+                     guess[2] + max_cam2rob_deviation,
+                     np.pi,
+                     np.pi,
+                     np.pi,
+                     guess[6] + max_tcp2target_deviation,
+                     guess[7] + max_tcp2target_deviation,
+                     guess[8] + max_tcp2target_deviation,
+                     np.pi,
+                     np.pi,
+                     np.pi],
+                    [guess[0] - max_cam2rob_deviation,
+                     guess[1] - max_cam2rob_deviation,
+                     guess[2] - max_cam2rob_deviation,
+                     -np.pi,
+                     -np.pi,
+                     -np.pi,
+                     guess[6] - max_tcp2target_deviation,
+                     guess[7] - max_tcp2target_deviation,
+                     guess[8] - max_tcp2target_deviation,
+                     -np.pi,
+                     -np.pi,
+                     -np.pi])
+    bounds_tuple = [(low, high) for low, high in zip(bounds.xmin, bounds.xmax)]
+    # define the new step taking routine and pass it to basinhopping
+    take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
+    minimizer_kwargs = {"args": (tcp2robot, camera2grid), "method": "SLSQP",
+                        "bounds": bounds_tuple}
+    print('starting basinhopping')
+    result = optimize.basinhopping(
+        func=error, x0=guess, minimizer_kwargs=minimizer_kwargs,
+        accept_test=bounds, disp=True, callback=callback, take_step=take_step,
+        niter=10, interval=5)
 
     json_dict = {"time": str(datetime.datetime.now()),
-                 "tcp2robot": G,
-                 "camera2grid": R}
-    with open(os.path.join(os.path.splitext(file_out)[0], '.json'), 'w') as \
+                 "cam2robot": {"xyz-angle": result.x[:6].tolist(),
+                               "Tmatrix": vector2mat(result.x[:6]).tolist()},
+                 "tcp2target": {"xyz-angle": result.x[6:].tolist(),
+                                "Tmatrix": vector2mat(result.x[6:]).tolist()}
+                 }
+
+    with open(os.path.splitext(file_out)[0] + '.json', 'w') as \
             result_json_file:
         json.dump(json_dict, result_json_file, indent=4)
+
+    return json_dict
+
+
+class Bounds(object):
+    def __init__(self, xmax, xmin):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+
+def error(guess, tcp2robot, camera2grid, ratio=0.5):
+    """
+    Calculates the difference between a guess at robot 2 cam transformations
+    compared to gathered data. Uses manhattan error for the distance (as
+    opposed to true line distance). Finds the angular difference between two
+    points. Takes the weighted sum of the manhattan distance and angular
+    distance based on the ratio.
+
+    Args:
+        guess (1x12 array): Input guess array. Values will range between the
+                            bounds passed in the optimize function. 6 dof
+                            camera 2 robot (x,y,z,axis-angle), 6 dof tcp 2
+                            target (x,y,z,axis-angle)
+        tcp2robot (nx6 array): Array of gathered data for the pose of the robot
+                               tool center point wrt. the robot coordinate base
+        camera2grid (nx6 array): Array of gathered data for the transformation
+                                 from the camera to the target
+        ratio (float): The ratio of weight given to the manhattan error vs the
+                       angular error. A higer value will give more weight to
+                       the manhattan error and less to the the angular error.
+                       Must be in the range [0,1]
+
+    Returns: A float, the total error between the guess and the collected
+             data
+    """
+    total_error = 0
+    if ratio < 0:
+        raise ValueError("ratio must be greater than or equal to zero")
+    if ratio > 1:
+        raise ValueError("ratio must be less than or equal to one")
+    for i in range(len(tcp2robot)):
+        guess_cam2rob = vector2mat(guess[:6])
+        guess_tcp2target = vector2mat(guess[6:])
+        guess_cam2tcp = np.matmul(guess_cam2rob,
+                                  vector2mat(np.concatenate(
+                                      (1000*np.array(tcp2robot[i][:3]),
+                                       np.array(tcp2robot[i][3:])))))
+        guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
+
+        manhattan_error = sum(abs(
+            np.array(guess_cam2target[:3, 3]) - np.array(camera2grid[i][:3])
+        ))
+        angular_error = math.acos(
+            (np.trace(np.matmul(vector2mat(np.array(camera2grid[i]))[:3, :3].T,
+                                guess_cam2target[:3, :3]))-1)/2)
+
+        total_error += manhattan_error*ratio + angular_error*(1-ratio)
+
+    return total_error
+
+
+def vector2mat(vector):
+    """
+    Converts a vector in form x,y,z,axis-angle to a homogenous transformation
+    matrix
+
+    Args:
+        vector (6 element list): a vector representation form of a
+                                 transformation matrix. x,y,z,axis-angle
+
+    Returns: A 4x4 np.ndarry of the homogenous transformation matrix
+    """
+    transformation_matrix = np.zeros((4, 4))
+    transformation_matrix[3, 3] = 1
+    try:
+        transformation_matrix[0:3, 3] = vector[:3, 0]
+    except:
+        transformation_matrix[0:3, 3] = vector[:3]
+    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
+    transformation_matrix[:3, :3] = rotation_matrix
+    return transformation_matrix
+
+
+def mat2vector(mat):
+    """
+    Converts a transformatiion matrix into a 6 dof vector. x,y,z,axis-angle
+    Args:
+        mat (4x4 ndarray): the transformation matrix
+
+    Returns: A 6 element list, x,y,z,axis-angle
+    """
+    vector = [0]*6
+    vector[:3] = np.asarray(mat[:3, 3])
+    axis_angle, _ = cv2.Rodrigues(mat[:3, :3])
+    vector[3:] = axis_angle
+    return vector
+
+
+def callback(x, f, accept):
+    """Prints out the local minimum result found in each iteration of the
+    basinhopping routine."""
+    print(x)
+
+
+class RandomDisplacementBounds(object):
+    """random displacement with bounds. For use with the baisnhopping routine.
+    Based on: http://stackoverflow.com/questions/21670080"""
+    def __init__(self, xmin, xmax, stepsize=0.5):
+        """Initializes a displacement generator
+
+        Args:
+            xmin (list of floats): The minimum values for all of the paramaters
+            xmin (list of floats): The maximum values for all of the paramaters
+            stepsize: The initial stepsize for the algorithim. This will be
+                      overwritten by the basinhopping routine.
+        """
+        self.xmin = xmin
+        self.xmax = xmax
+        self.stepsize = stepsize
+
+    def __call__(self, x):
+        """Take a random step, from the prior, proportional to the stepsize wrt
+        the bounds. Ensure the new position is within the bounds
+
+        Args:
+            x (np.array of floats): The prior position
+
+        Returns:
+            The new starting position for optimization
+        """
+        print('generating points')
+        while True:
+            xnew = x + np.multiply(
+                np.random.uniform(-self.stepsize, self.stepsize, np.shape(x)),
+                (self.xmax-self.xmin))
+            if np.all(xnew < self.xmax) and np.all(xnew > self.xmin):
+                break
+        print('finished generating points')
+        return xnew
 
 if __name__ == "__main__":
     main()

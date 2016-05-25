@@ -31,6 +31,7 @@ import camera
 import json
 import track_grid
 import re
+import compute_transformations
 
 
 def check_transformation(supermatrix, ImageFolder, ResultFolder, rows, cols, space, intrinsic, distortion):
@@ -65,7 +66,7 @@ def check_transformation(supermatrix, ImageFolder, ResultFolder, rows, cols, spa
     if not os.path.exists(directory_out):
         os.makedirs(directory_out)
 
-    axis_length = 50
+    axis_length = 250
     axis = np.float32([[0,0,0],[axis_length, 0, 0], [0, axis_length, 0],
                                 [0, 0, axis_length]]).reshape(-1, 3)
 
@@ -196,69 +197,150 @@ def sort_nicely(l):
 #     [154.61, 156.377, 2032.33]
 # ])
 
+guess_tcp2target = np.array([
+            [
+                0.9982463218583976,
+                -0.05914679682431312,
+                -0.002436661980057513,
+                -197.33352185827397
+            ],
+            [
+                -0.059137624424438165,
+                -0.998243061287316,
+                0.0036785824935447356,
+                112.55747772489642
+            ],
+            [
+                -0.002649957285642191,
+                -0.003528033042807774,
+                -0.9999902653072344,
+                6.914867237505867
+            ],
+            [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        ])
+tcp2robot =         [[
+            0.1535513220283944,
+            0.3681083737882555,
+            0.8978855797329478,
+            -1.9105306547966427,
+            -0.7131508073189232,
+            -1.7147285607488287
+        ]]
+i = 0
+guess_cam2rob = np.array([
+            [
+                -0.7026499558759214,
+                0.711061772870129,
+                -0.0259652589117656,
+                155.70940950205338
+            ],
+            [
+                0.028947565394322416,
+                -0.00789462021461107,
+                -0.999549755354584,
+                746.7496373291195
+            ],
+            [
+                -0.7109466069722165,
+                -0.7030852225260154,
+                -0.015036352624107074,
+                1471.4252938788886
+            ],
+            [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        ])
+guess_cam2tcp = np.matmul(guess_cam2rob, compute_transformations.vector2mat(np.concatenate(
+    (1000 * np.array(tcp2robot[i][:3]), np.array(tcp2robot[i][3:])))))
+guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
+
 supermatrix2 = np.array([[
-    [[-0.00500405, 0.99998434, 0.0025046,151.48231455772967],
-     [-0.9306746, -0.00374094, -0.36582892,-45.84279051621655],
-     [-0.36581382, -0.00416159, 0.93067875, 1140.7020382437486],
-     [0,0,0,1]],
-    [[0.977, -0.178, -0.121,-38.0],
-     [0.136, 0.946, -0.294, -202.0],
-     [0.167, 0.270, 0.948, 2235.0],
-     [0,0,0,1]],
-    [[- 0.00500405, -0.99998434, -0.00250460000000012,250.55],
-     [- 0.9306746, 0.00374093999999996, 0.36582892,-218.392],
-     [- 0.36581382, 0.00416159000000011, -0.93067875,1072.610],
-     [0,0,0,1]],
-    [[-0.659927435608819, 0.751329313735808, -0.0001893009399004,75.79],
-     [0.199371042478852, 0.174873921787055, -0.964194121183759,552.50],
-     [-0.72439420933552, -0.636335894927072, -0.265197405236951,1656.20],
-     [0,0,0,1]],
-    [[1,0,0,154.61],
-     [0,1,0,156.377],
-     [0,0,1,2032.33],
-     [0,0,0,1]]
+#     [[-1.25812084e-02, 9.90265918e-01, 1.38618629e-01, 1.77788714e+02],
+#      [-9.57905818e-01, 2.78268728e-02, -2.85730834e-01, 5.11075809e+01],
+#      [-2.86806830e-01, -1.36378430e-01, 9.48231389e-01, 1.10263438e+03],
+#      [0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 1.00000000e+00]],
+#     [[-7.15156933e-01,   6.98541126e-01,  -2.43075326e-02,   1.78200000e+02],
+#     [  4.12029080e-02,   7.41591789e-03,  -9.99123278e-01,   0.24300000e+02],
+#     [ -6.97748437e-01,  -7.15531481e-01,  -3.40854708e-02,   1.51570000e+03],
+#     [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   1.00000000e+00]],
+#     [[-.7152,.6985,-.0243,178.2],
+#      [.0412,.0074,-.9991,724.3],
+#      [-.6978,-.7155,-.0341,1515.7],
+#      [0.,0.,0.,1.]],
+#     [[-8.36255661e-01,   5.15571159e-01,   1.86715960e-01,   3.03700162e+02],
+#     [ -7.09566325e-02,   2.35901562e-01,  -9.69182960e-01,  -1.63741761e+02],
+#     [ -5.43729368e-01,  -8.23733472e-01,  -1.60690823e-01,   1.11456182e+03],
+#     [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   1.00000000e+00]],
+#     [[ 4.99180183e-01,  -8.44908180e-01,  -1.92222039e-01,   4.40196637e+02],
+#     [  2.37040237e-01,  -8.02218864e-02,   9.68181995e-01,  -1.68284775e+02],
+#     [ -8.33445301e-01,  -5.28861623e-01,   1.60232059e-01,   1.28500766e+03],
+#     [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   1.00000000e+00]]
+#     [[-7.04033421e-01,   7.09692924e-01,  -2.59402374e-02,   1.51836794e+02],
+#     [  3.29330487e-02,  -3.86083310e-03,  -9.99450103e-01,   7.55218885e+02],
+#     [ -7.09402816e-01,  -7.04500567e-01,  -2.06541961e-02,   1.46384759e+03],
+#     [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   1.00000000e+00]],
+#     [[ -3.65398965e-02,  -9.97544943e-01,  -5.97404705e-02,   2.81701946e+02],
+#      [ -9.91340139e-01,   2.86375188e-02,   1.28158581e-01,  -1.38574698e+02],
+#      [ -1.26133126e-01,   6.39060288e-02,  -9.89952753e-01,   1.07700385e+03],
+#      [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   1.00000000e+00]]
+    guess_cam2rob,
+    guess_cam2target,
+    guess_cam2tcp
+
+
+
 ]])
 
-grid2tcp = np.array(
-    [[1.0000,0,0,185.0000],
-     [0,-1.0000,-0.0000,100.0000],
-     [0,0.0000,-1.0000,0],
-     [0,0,0,1.0000]]
-)
 
-with open('../examples/gridFinding.json', 'r') as grid_json:
-    json_dictionary = json.load(grid_json)
 
-cam2grid = np.array(json_dictionary['camera2grid'])
-base2tcp = np.array(json_dictionary['tcp2robot'])
+# grid2tcp = np.array(
+#     [[1.0000,0,0,185.0000],
+#      [0,-1.0000,-0.0000,100.0000],
+#      [0,0.0000,-1.0000,0],
+#      [0,0,0,1.0000]]
+# )
 
-cam2gridT = np.zeros((cam2grid.shape[0], 4, 4))
-base2tcpT = np.zeros((cam2grid.shape[0], 4, 4))
+# with open('../examples/gridFinding.json', 'r') as grid_json:
+#     json_dictionary = json.load(grid_json)
+#
+# cam2grid = np.array(json_dictionary['camera2grid'])
+# base2tcp = np.array(json_dictionary['tcp2robot'])
+#
+# cam2gridT = np.zeros((cam2grid.shape[0], 4, 4))
+# base2tcpT = np.zeros((cam2grid.shape[0], 4, 4))
+#
+# for i in range(cam2grid.shape[0]):
+#     [cam2gridRot, _] = cv2.Rodrigues((cam2grid[i][3:]))
+#     translation = np.array([cam2grid[i][:3]])
+#     cam2gridT[i] = np.concatenate((np.concatenate((cam2gridRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
+#
+# for i in range(cam2grid.shape[0]):
+#     [cam2tcpRot, _] = cv2.Rodrigues((base2tcp[i][3:]))
+#     translation = np.array([base2tcp[i][:3]])*1000
+#     base2tcpT[i] = np.concatenate((np.concatenate((cam2tcpRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
+#
+# cam2tcpT = np.matmul(cam2gridT,grid2tcp)
+#
+# tcp2baseT = np.zeros(base2tcpT.shape)
+# for i in range(base2tcpT.shape[0]):
+#     tcp2baseT[i] = np.linalg.inv(base2tcpT[i])
+#
+# cam2baseT = np.matmul(cam2tcpT,tcp2baseT)
+#
+# supermatrix = np.zeros((cam2baseT.shape[0],3,4,4))
+# supermatrix[:,0] = cam2baseT
+# supermatrix[:,1] = cam2tcpT
+# supermatrix[:,2] = cam2gridT
 
-for i in range(cam2grid.shape[0]):
-    [cam2gridRot, _] = cv2.Rodrigues((cam2grid[i][3:]))
-    translation = np.array([cam2grid[i][:3]])
-    cam2gridT[i] = np.concatenate((np.concatenate((cam2gridRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
-
-for i in range(cam2grid.shape[0]):
-    [cam2tcpRot, _] = cv2.Rodrigues((base2tcp[i][3:]))
-    translation = np.array([base2tcp[i][:3]])*1000
-    base2tcpT[i] = np.concatenate((np.concatenate((cam2tcpRot, translation.T), axis=1),np.array([[0,0,0,1]])),axis=0)
-
-cam2tcpT = np.matmul(cam2gridT,grid2tcp)
-
-tcp2baseT = np.zeros(base2tcpT.shape)
-for i in range(base2tcpT.shape[0]):
-    tcp2baseT[i] = np.linalg.inv(base2tcpT[i])
-
-cam2baseT = np.matmul(cam2tcpT,tcp2baseT)
-
-supermatrix = np.zeros((cam2baseT.shape[0],3,4,4))
-supermatrix[:,0] = cam2baseT
-supermatrix[:,1] = cam2tcpT
-supermatrix[:,2] = cam2gridT
-
-ImageFolder = 'Images'
+ImageFolder = 'Images1'
 ResultFolder = 'Result'
 rows = 7
 cols = 8
@@ -267,4 +349,4 @@ intrinsic = np.array([[2462.345193638386,0.0,1242.6269086495981],[0.0,2463.61338
                      [0.0,0.0,1.0]])
 distortion = np.array([[-0.3954032063765203,0.20971494160750948,0.0008056336338866635,9.237725225524615e-05,
                        -0.06042030845477194]])
-check_transformation(supermatrix,ImageFolder,ResultFolder,rows,cols,space,intrinsic,distortion)
+check_transformation(supermatrix2,ImageFolder,ResultFolder,rows,cols,space,intrinsic,distortion)
