@@ -31,15 +31,16 @@ setup(name='robot2cam_calibration',
       install_requires=[
           'numpy',
           'cv2',
-          'ur_cb2',
-          'quaternions',
           'scipy'
       ],
       # dependency_links=['https://github.com/jordens/pyflycapture2'],
       include_package_data=True,
       entry_points={
         'console_scripts': [
-            'robot2cam-record=robot2cam_calibration.get_correspondences:main',
-            'robot2cam-images=robot2cam_calibration.get_images:main']
+            'robot2cam-record-ur=robot2cam_calibration.get_correspondences:main',
+            'robot2cam-images-ur=robot2cam_calibration.get_images:main',
+            'robot2cam-compute=robot2cam_calibration.compute_transformations:main',
+            'robot2cam-check=robot2cam_calibration.check_transformations:main'
+        ]
       },
       zip_safe=False)
