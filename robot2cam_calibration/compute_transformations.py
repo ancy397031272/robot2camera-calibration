@@ -306,7 +306,7 @@ def vector2mat(vector):
         transformation_matrix[0:3, 3] = vector[:3, 0]
     except:
         transformation_matrix[0:3, 3] = vector[:3]
-    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
+    rotation_matrix, _ = cv2.Rodrigues(np.array(vector[3:]))
     transformation_matrix[:3, :3] = rotation_matrix
     return transformation_matrix
 
@@ -321,7 +321,7 @@ def mat2vector(mat):
     """
     vector = [0]*6
     vector[:3] = np.asarray(mat[:3, 3])
-    axis_angle, _ = cv2.Rodrigues(mat[:3, :3])
+    axis_angle, _ = cv2.Rodrigues(np.array(mat[:3, :3]))
     vector[3:] = axis_angle
     return vector
 
