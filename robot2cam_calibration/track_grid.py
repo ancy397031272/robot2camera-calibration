@@ -194,7 +194,7 @@ class GridLocation(object):
         self.__del__()
 
 
-def draw_axes(image_raw, corners, image_points):
+def draw_axes(image_raw, corners, image_points, label=''):
     """Draw axes on an image
 
     Draw axes which will be centered at the first corner and oriented by the
@@ -207,6 +207,7 @@ def draw_axes(image_raw, corners, image_points):
             the first point is the origin of the axes to draw
         image_points (np.array): 2D points on the image at the end of the three
             axes
+        label (str): A string label to place near the coordinate frame
 
     Returns: numpy.ndarray Image with the axes drawn on it.
 
@@ -219,8 +220,10 @@ def draw_axes(image_raw, corners, image_points):
                            (255, 0, 0), 5)
     if temp is not None:
         image = temp
+
     letters = np.array(image_points)
     letter_space = 30
+
     for row in range(letters.shape[0]):
         if letters[row][0][0] < corner[0]:
             letters[row][0][0] -= letter_space
@@ -228,6 +231,7 @@ def draw_axes(image_raw, corners, image_points):
             letters[row][0][1] -= letter_space
         else:
             letters[row][0][1] += 1.5*letter_space
+
     temp = cv2.putText(image, "x", tuple(letters[0].ravel()),
                        cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 4)
     if temp is not None:
@@ -237,6 +241,7 @@ def draw_axes(image_raw, corners, image_points):
                            (0, 255, 0), 5)
     if temp is not None:
         image = temp
+
     temp = cv2.putText(image, "y", tuple(letters[1].ravel()),
                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
     if temp is not None:
@@ -246,9 +251,15 @@ def draw_axes(image_raw, corners, image_points):
                            (0, 0, 255), 5)
     if temp is not None:
         image = temp
+
     temp = cv2.putText(image, "z", tuple(letters[2].ravel()),
                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
     if temp is not None:
         image = temp
 
+    # put below the axes in the middle:
+    temp = cv2.putText(image, label, corner,
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    if temp is not None:
+        image = temp
     return image
