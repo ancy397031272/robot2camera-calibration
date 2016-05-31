@@ -261,14 +261,14 @@ def error(guess, tcp2robot, camera2grid, ratio=0.25):
                                        np.array(tcp2robot[i][3:])))))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
 
-        manhattan_error = sum(abs(
+        euclidean_distance = np.sqrt(np.sum(np.square(
             np.array(guess_cam2target[:3, 3]) - np.array(camera2grid[i][:3])
-        ))
+        )))
         angular_error = math.acos(
             (np.trace(np.matmul(vector2mat(np.array(camera2grid[i]))[:3, :3].T,
                                 guess_cam2target[:3, :3]))-1)/2)
 
-        errors[i] = manhattan_error*ratio + angular_error*(1-ratio)
+        errors[i] = euclidean_distance*ratio + angular_error*(1-ratio)
 
     return np.mean(errors[
                        np.where(mad_based_outlier(np.array(errors)) == False)])
