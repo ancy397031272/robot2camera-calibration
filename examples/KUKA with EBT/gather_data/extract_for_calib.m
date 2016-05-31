@@ -25,7 +25,7 @@ norm_velocities = bsxfun(@rdivide,velocities,mean(velocities));
 smooth_sum_velocity = conv(sum(norm_velocities,2), gaussFilter, 'same');
 still = smooth_sum_velocity<(mean(smooth_sum_velocity)*.1);
 
-tracking_index = raw_data(:,2)==1;
+tracking_index = raw_data(1:end-1,2)==1;
 tracking_data = raw_data(tracking_index,:);
 
 % still = s2d>1e-4;

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+robot2cam-compute --correspondences gather_data/2016-5-31_15-38-12.json
+robot2cam-check --image_folder gather_data/Images/ --robot_data gather_data/2016-5-31_15-38-12.json
