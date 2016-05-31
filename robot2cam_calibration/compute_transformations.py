@@ -246,6 +246,7 @@ def error(guess, tcp2robot, camera2grid, ratio=0.25):
     Returns: A float, the total error between the guess and the collected
              data
     """
+    errors = np.zeros(len(tcp2robot))
     total_error = 0
     if ratio < 0:
         raise ValueError("ratio must be greater than or equal to zero")
@@ -267,9 +268,25 @@ def error(guess, tcp2robot, camera2grid, ratio=0.25):
             (np.trace(np.matmul(vector2mat(np.array(camera2grid[i]))[:3, :3].T,
                                 guess_cam2target[:3, :3]))-1)/2)
 
-        total_error += manhattan_error*ratio + angular_error*(1-ratio)
+        errors[i] = manhattan_error*ratio + angular_error*(1-ratio)
 
-    return total_error
+    return np.mean(errors[
+                       np.where(mad_based_outlier(np.array(errors)) == False)])
+
+
+def mad_based_outlier(points, thresh=3.5):
+    """http://stackoverflow.com/questions/22354094/pythonic-way-of-detecting-
+    outliers-in-one-dimensional-observation-data/22357811#22357811"""
+    if len(points.shape) == 1:
+        points = points[:,None]
+    median = np.median(points, axis=0)
+    diff = np.sum((points - median)**2, axis=-1)
+    diff = np.sqrt(diff)
+    med_abs_deviation = np.median(diff)
+
+    modified_z_score = 0.6745 * diff / med_abs_deviation
+
+    return modified_z_score > thresh
 
 
 def vector2mat(vector):
