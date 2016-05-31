@@ -1,0 +1,41 @@
+&ACCESS RVP
+&REL 5
+DEFDAT calibRSI
+
+DECL POS CalibrationPoints[29]
+CalibrationPoints[1]={X -708.93,Y 11.78,Z .04,A -.01,B -.02,C .01}
+CalibrationPoints[2]={X -708.85,Y 335.73,Z -131.60,A 4.46,B 3.39,C -10.36}
+CalibrationPoints[3]={X -574.3,Y 318.88,Z -288.66,A -7.11,B 16.10,C -5.15}
+CalibrationPoints[4]={X -558.3,Y 212.01,Z -187.84,A 4.4,B -5.41,C -8.13}
+CalibrationPoints[5]={X -560,Y 496.58,Z -447.2,A 12.8,B -14.10,C -16.54}
+
+CalibrationPoints[6]={X -906.46,Y 687.03,Z -368.8,A 1.68,B -11.59,C -10.86}
+CalibrationPoints[7]={X -738.01,Y 534.61,Z -101.32,A 1.63,B -6.32,C 1.36}
+CalibrationPoints[8]={X -719.46,Y 617.03,Z -360.57,A -12.13,B -7.77,C -20.62}
+CalibrationPoints[9]={X -666.14,Y 678.22,Z -450.9,A -6.8,B -19.75,C 9.47}
+CalibrationPoints[10]={X -743.75,Y 689.37,Z -1047.47,A 10.65,B -2.65,C 15.46}
+CalibrationPoints[11]={X -259.97,Y 793.49,Z -1037.96,A 1.63,B 4.54,C 17.57}
+CalibrationPoints[12]={X -256.29,Y 570.25,Z -747.99,A -20.74,B .01,C -1.67}
+CalibrationPoints[13]={X -257.7,Y 281.87,Z -716.22,A 20.3,B 10.81,C 9.34}
+CalibrationPoints[14]={X -257.69,Y 58.91,Z -376.22,A 7.43,B 9.15,C 25.11}
+CalibrationPoints[15]={X -257.66,Y 58.89,Z -51.27,A -1.09,B 28,C 10.89}
+CalibrationPoints[16]={X -117.82,Y -51.2,Z -173.91,A 3.38,B -16.10,C -3.88}
+CalibrationPoints[17]={X -117.81,Y 128.04,Z -277.09,A -10.89,B .57,C 8.24}
+CalibrationPoints[18]={X -56.37,Y 253.97,Z -339.58,A -8.17,B 11.3,C 23.08}
+CalibrationPoints[19]={X -56.36,Y 415.44,Z -589.33,A -31.6,B 9.92,C 12.97}
+CalibrationPoints[20]={X 85.31,Y 102.1,Z -145.4,A -2.95,B 5.23,C -12.78}
+CalibrationPoints[21]={X 85.24,Y -28.98,Z -24.21,A -1.52,B -9.95,C 2.51}
+CalibrationPoints[22]={X 220.75,Y 69.73,Z -227.44,A 22.17,B -9.95,C 2.5}
+CalibrationPoints[23]={X 220.74,Y 294.98,Z -227.46,A 21.31,B -29.06,C 10.62}
+CalibrationPoints[24]={X 414.2,Y 499.86,Z -364.7,A 1.45,B -16.71,C -4.03}
+CalibrationPoints[25]={X 537.47,Y 203.48,Z -775.25,A -19.98,B 2.97,C 7.52}
+CalibrationPoints[26]={X 537.47,Y -94.77,Z -582.88,A -3.06,B 20.29,C 6.61}
+;CalibrationPoints[27]={X 634.12,Y -190.82,Z -582.19,A -2.07,B 2.89,C 25.85}
+CalibrationPoints[27]={X 334.85,Y 81.4,Z -348.75,A 18.64,B -9.81,C 1.13}
+CalibrationPoints[28]={X 334.84,Y 316.88,Z -128.19,A -2.69,B -24.4,C -12.8}
+CalibrationPoints[29]={X 298.19,Y 316.87,Z -192.6,A -6.67,B -4.98,C 8.67}
+
+DECL RSIERR RET
+DECL INT hEthernet
+
+ENDDAT
