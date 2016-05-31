@@ -57,12 +57,14 @@ def main():
 
     parser.add_argument("--cam2rob", type=float, nargs=6,
                         help="Initial guess for the camera to robot "
-                             "transformation",
+                             "transformation, x,y,z,rotation vector",
+                        metavar=('x','y','z','a','b','c'),
                         default=np.array([0, 0, 1000, 0, 0, 0]).tolist())
 
     parser.add_argument("--tcp2target", type=float, nargs=6,
                         help="Initial guess for the tcp to target "
-                             "(robot tool)",
+                             "(robot tool), x,y,z,rotation vector",
+                        metavar=('x', 'y', 'z', 'a', 'b', 'c'),
                         default=np.array([0, 0, 0, 0, 0, 0]).tolist())
 
     parser.add_argument("--max_cam2rob", type=float,
