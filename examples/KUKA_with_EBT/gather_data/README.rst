@@ -1,3 +1,6 @@
+Gather Data from KUKA arm using EBT
+===================================
+
 It is possible to calibrate a camera to a robot and calibrate the tool
 offset at once using Edge Based Tracking. You will need to have `Edge
 Based
