@@ -40,7 +40,7 @@ setup(name='robot2cam_calibration',
             'robot2cam-record-ur=robot2cam_calibration.get_correspondences:main',
             'robot2cam-images-ur=robot2cam_calibration.get_images:main',
             'robot2cam-compute=robot2cam_calibration.compute_transformations:main',
-            'robot2cam-check=robot2cam_calibration.check_transformations:main'
+            'robot2cam-check=robot2cam_calibration.check_transformation:main'
         ]
       },
       zip_safe=False)
