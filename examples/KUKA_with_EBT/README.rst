@@ -1,5 +1,8 @@
 Calibrate and Verify KUKA arm
 =============================
+
+.. note:: This README is housed in `/examples/KUKA_with_EBT`
+
 In order to calibrate a KUKA robot using EBT, you will first have to
 gather the appropriate data. For this, read ``HowToGatherData.md`` in
 the ``gather_data`` directory.

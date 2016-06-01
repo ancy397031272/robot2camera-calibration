@@ -14,12 +14,3 @@ We have built the library to handle two primary use cases which we have:
    KUKA arm.
 
 It would be great to have the system expanded in the future.
-
-Further Instructions: `Calibrating UR
-arm <examples/KUKA%20with%20EBT/calibrate_check%20KUKA%20with%20EBT.md>`__
-`Gathering data to calibrate
-KUKA <examples/KUKA%20with%20EBT/gather_data/HowToGatherData.md>`__
-`Calibrating KUKA
-arm <examples/KUKA%20with%20EBT/calibrate_check%20KUKA%20with%20EBT.md>`__
-
-.. include::examples/KUKA%20with%20EBT/calibrate_check%20KUKA%20with%20EBT.md

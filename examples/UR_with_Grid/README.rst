@@ -1,6 +1,8 @@
 Calibrate UR Arm
 ================
 
+.. note:: This README is housed in `/examples/UR_with_Grid`
+
 It is very easy to calibrate a UR Robot to a point grey camera using a
 grid. Hopefully, in the future, this can be extended to other hardware
 as well.

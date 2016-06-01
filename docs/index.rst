@@ -7,9 +7,12 @@
 
 .. include:: ../README.rst
 
-API docs
-========
+
+
+Example and API docs
+====================
 .. toctree::
    :maxdepth: 2
 
-   _modules/ur_cb2
+   example_instruction_links
+   _modules/modules.rst
