@@ -162,7 +162,7 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing,
                 while not (robot.at_goal() and robot.is_stopped()):
                     time.sleep(.25)
                 time.sleep(.25)  # let everything settle
-
+                print("reached goal")
                 go_on = 0
                 while go_on <= 5:
                     try:
@@ -175,6 +175,9 @@ def get_correspondences(robot_samples, calibration, rows, cols, spacing,
                     except RuntimeError as e:
                         print("something went wrong: {}".format(e))
                         go_on += 1
+    tcp2robot = np.array(tcp2robot)
+    tcp2robot[:, 0:3] = tcp2robot[:, 0:3] * 1000
+    tcp2robot = tcp2robot.tolist()
 
     print(np.asarray(tcp2robot))  # Axis-Angle [x,y,z,ax,ay,az]
     print(np.asarray(camera2grid))
