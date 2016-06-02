@@ -12,8 +12,8 @@ interface.
 
 You will need to setup your KUKA to talk to the KUKA-RSI interface.
 Example KRL code for this can be found in 
-examples/KUKA_with_EBT/gather_data/tp_files Then load a program with a 
-series of diversified points onto the KUKA (like those in the tp\_files 
+"examples/KUKA_with_EBT/gather_data/tp_files" Then load a program with a 
+series of diversified points onto the KUKA (like those in the "tp_files" 
 directory) which talks over the RSI interface and stops for a few seconds 
 at each point.
 
