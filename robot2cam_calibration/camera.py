@@ -38,14 +38,14 @@ import cv2
 class Camera(object):
     """Wraps various camera and image capture technologies.
 
+    Supported Cameras:
+    
+    - Flycapture2 devices : `flycap`, `flycap2`, `flycapture`, `flycapture2`
+
     Attributes:
         intrinsic: A numpy array of the camera intrinsic matrix
         distortion: A numpy array of the camera distortion parameters
         cam: A camera or other image acquisition device, which this class wraps.
-
-    Supported Cameras:
-    ..................
-    - Flycapture2 devices : `flycap`, `flycap2`, `flycapture`, `flycapture2`
     """
     def __init__(self, name, intrinsic=None, distortion=None):
         """Sets up camera acquisition and reads calibration data.

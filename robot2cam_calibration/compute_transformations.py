@@ -57,12 +57,14 @@ def main():
 
     parser.add_argument("--cam2rob", type=float, nargs=6,
                         help="Initial guess for the camera to robot "
-                             "transformation",
+                             "transformation, x,y,z,rotation vector",
+                        metavar=('x','y','z','a','b','c'),
                         default=np.array([0, 0, 1000, 0, 0, 0]).tolist())
 
     parser.add_argument("--tcp2target", type=float, nargs=6,
                         help="Initial guess for the tcp to target "
-                             "(robot tool)",
+                             "(robot tool), x,y,z,rotation vector",
+                        metavar=('x', 'y', 'z', 'a', 'b', 'c'),
                         default=np.array([0, 0, 0, 0, 0, 0]).tolist())
 
     parser.add_argument("--max_cam2rob", type=float,
@@ -75,21 +77,35 @@ def main():
                              "transformation from the guess",
                         default=500)
 
+    parser.add_argument("--iter", type=int, help="number of iterations to "
+                                                 "perform of the basin hopping"
+                                                 "routine.", default=250)
+
+    parser.add_argument("--minimizer", type=str, help="The minimizer to use at "
+                                                      "each basin hopping stop"
+                                                      "Valid options are: SLSQP"
+                                                      "TNC, and L-BFGS-B",
+                        default="SLSQP")
+
     args = parser.parse_args()
 
-    compute_transformation(
+    result = compute_transformation(
         correspondences=args.correspondences,
         file_out=args.out,
         cam2rob_guess=args.cam2rob,
         tcp2target_guess=args.tcp2target,
         max_cam2rob_deviation=args.max_cam2rob,
         max_tcp2target_deviation=args.max_tcp2target,
+        iterations=args.iter,
+        minimizer=args.minimizer
     )
+
+    print('Final Result:\n{}'.format(result))
 
 
 def compute_transformation(correspondences, file_out, cam2rob_guess,
                            tcp2target_guess, max_cam2rob_deviation,
-                           max_tcp2target_deviation):
+                           max_tcp2target_deviation, iterations, minimizer):
     """Computes the camera to robot base and tcp to target (flange to tcp in
     some cases) transformations. Uses matched coorespondences of
     transformations from the camera to a fixed point past the final robot axis
@@ -103,7 +119,10 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
                                   'tcp2robot' and 'camera2grid' should be lists
                                   of lists, with each individual list being a
                                   Rodrigues vector
-                                  (x,y,z,3 element rotation vector/axis-angle)
+                                  (x,y,z,3 element rotation vector/axis-angle).
+                                  Linear distance must be consistent (mm are
+                                  recommended). Angular distances must be in
+                                  radians.
         file_out (string): The name of the file to be output (no extension)
         cam2rob_guess (6 element list): The Rodrigues vector for the initial
                                         guess of the camera to robot
@@ -117,6 +136,9 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
         max_tcp2target_deviation (float): The x,y,z range around the initial
                                           camera to target guess which should
                                           be searched.
+        iterations (int): The number of iterations of basin hopping to perform.
+        minimizer (str): The minimizer to use at each basin hopping stop
+                         Valid options are: SLSQP TNC, and L-BFGS-B
 
     Returns: The results as a dictionary
     """
@@ -157,19 +179,29 @@ def compute_transformation(correspondences, file_out, cam2rob_guess,
     bounds_tuple = [(low, high) for low, high in zip(bounds.xmin, bounds.xmax)]
     # define the new step taking routine and pass it to basinhopping
     take_step = RandomDisplacementBounds(bounds.xmin, bounds.xmax)
-    minimizer_kwargs = {"args": (tcp2robot, camera2grid), "method": "SLSQP",
-                        "bounds": bounds_tuple}
+    minimizer_kwargs = {"args": (tcp2robot, camera2grid), "method": minimizer,
+                        "bounds": bounds_tuple, "options":{"maxiter": 25000}}
     print('starting basinhopping')
     result = optimize.basinhopping(
         func=error, x0=guess, minimizer_kwargs=minimizer_kwargs,
-        accept_test=bounds, disp=True, callback=callback, take_step=take_step,
-        niter=10, interval=5)
+        accept_test=bounds, disp=False, callback=callback, take_step=take_step,
+        niter=iterations, interval=25,
+        niter_success=math.ceil(iterations/7.5))
 
     json_dict = {"time": str(datetime.datetime.now()),
                  "cam2robot": {"xyz-angle": result.x[:6].tolist(),
                                "Tmatrix": vector2mat(result.x[:6]).tolist()},
                  "tcp2target": {"xyz-angle": result.x[6:].tolist(),
-                                "Tmatrix": vector2mat(result.x[6:]).tolist()}
+                                "Tmatrix": vector2mat(result.x[6:]).tolist()},
+                 "minimization": {"terminated for":result.message,
+                                  "Number of minimization failures":result.minimization_failures,
+                                  "Number of iterations":result.nit,
+                                  "Number of executions of error function":result.nfev,
+                                  "method": minimizer,
+                                  "best result":{"success":str(result.lowest_optimization_result.success),
+                                                 "message": result.lowest_optimization_result.message,
+                                                 "error": result.lowest_optimization_result.fun}
+                                  }
                  }
 
     with open(os.path.splitext(file_out)[0] + '.json', 'w') as \
@@ -191,7 +223,7 @@ class Bounds(object):
         return tmax and tmin
 
 
-def error(guess, tcp2robot, camera2grid, ratio=0.5):
+def error(guess, tcp2robot, camera2grid, ratio=0.25):
     """
     Calculates the difference between a guess at robot 2 cam transformations
     compared to gathered data. Uses manhattan error for the distance (as
@@ -216,6 +248,7 @@ def error(guess, tcp2robot, camera2grid, ratio=0.5):
     Returns: A float, the total error between the guess and the collected
              data
     """
+    errors = np.zeros(len(tcp2robot))
     total_error = 0
     if ratio < 0:
         raise ValueError("ratio must be greater than or equal to zero")
@@ -226,20 +259,36 @@ def error(guess, tcp2robot, camera2grid, ratio=0.5):
         guess_tcp2target = vector2mat(guess[6:])
         guess_cam2tcp = np.matmul(guess_cam2rob,
                                   vector2mat(np.concatenate(
-                                      (1000*np.array(tcp2robot[i][:3]),
+                                      (np.array(tcp2robot[i][:3]),
                                        np.array(tcp2robot[i][3:])))))
         guess_cam2target = np.matmul(guess_cam2tcp, guess_tcp2target)
 
-        manhattan_error = sum(abs(
+        euclidean_distance = np.sqrt(np.sum(np.square(
             np.array(guess_cam2target[:3, 3]) - np.array(camera2grid[i][:3])
-        ))
+        )))
         angular_error = math.acos(
             (np.trace(np.matmul(vector2mat(np.array(camera2grid[i]))[:3, :3].T,
                                 guess_cam2target[:3, :3]))-1)/2)
 
-        total_error += manhattan_error*ratio + angular_error*(1-ratio)
+        errors[i] = euclidean_distance*ratio + angular_error*(1-ratio)
 
-    return total_error
+    return np.mean(errors[
+                       np.where(mad_based_outlier(np.array(errors)) == False)])
+
+
+def mad_based_outlier(points, thresh=3.5):
+    """http://stackoverflow.com/questions/22354094/pythonic-way-of-detecting-
+    outliers-in-one-dimensional-observation-data/22357811#22357811"""
+    if len(points.shape) == 1:
+        points = points[:,None]
+    median = np.median(points, axis=0)
+    diff = np.sum((points - median)**2, axis=-1)
+    diff = np.sqrt(diff)
+    med_abs_deviation = np.median(diff)
+
+    modified_z_score = 0.6745 * diff / med_abs_deviation
+
+    return modified_z_score > thresh
 
 
 def vector2mat(vector):
@@ -259,7 +308,7 @@ def vector2mat(vector):
         transformation_matrix[0:3, 3] = vector[:3, 0]
     except:
         transformation_matrix[0:3, 3] = vector[:3]
-    rotation_matrix, _ = cv2.Rodrigues(vector[3:])
+    rotation_matrix, _ = cv2.Rodrigues(np.array(vector[3:]))
     transformation_matrix[:3, :3] = rotation_matrix
     return transformation_matrix
 
@@ -274,7 +323,7 @@ def mat2vector(mat):
     """
     vector = [0]*6
     vector[:3] = np.asarray(mat[:3, 3])
-    axis_angle, _ = cv2.Rodrigues(mat[:3, :3])
+    axis_angle, _ = cv2.Rodrigues(np.array(mat[:3, :3]))
     vector[3:] = axis_angle
     return vector
 
@@ -282,7 +331,7 @@ def mat2vector(mat):
 def callback(x, f, accept):
     """Prints out the local minimum result found in each iteration of the
     basinhopping routine."""
-    print(x)
+    print('minimized to: {}\nWith an error of: {}. This is {}ACCEPTED\n'.format(x, f, '' if accept else 'NOT '))
 
 
 class RandomDisplacementBounds(object):
@@ -311,14 +360,18 @@ class RandomDisplacementBounds(object):
         Returns:
             The new starting position for optimization
         """
-        print('generating points')
+        print('generating points with step size {}, yielding a range of: {} to {}'.format(self.stepsize, x + np.multiply(
+                [-self.stepsize]*x.size,
+                (self.xmax-self.xmin)), x + np.multiply(
+                [self.stepsize]*x.size,
+                (self.xmax-self.xmin))))
         while True:
             xnew = x + np.multiply(
                 np.random.uniform(-self.stepsize, self.stepsize, np.shape(x)),
                 (self.xmax-self.xmin))
             if np.all(xnew < self.xmax) and np.all(xnew > self.xmin):
                 break
-        print('finished generating points')
+        print('finished generating new guess: {}'.format(xnew))
         return xnew
 
 if __name__ == "__main__":

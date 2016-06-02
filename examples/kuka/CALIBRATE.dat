@@ -1,4 +1,0 @@
-DECL POS CalibrationPoints[3]
-CalibrationPoints[1]={X -250,Y 400,Z -125,A 0,B 0,C 0}
-CalibrationPoints[2]={X -100,Y 400,Z -125,A 0,B 0,C 0}
-CalibrationPoints[3]={X -100,Y 550,Z -125,A 0,B 0,C 0}

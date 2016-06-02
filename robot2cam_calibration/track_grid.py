@@ -1,7 +1,4 @@
-"""A function to move around a robot and capture images from it.
-
-This assumes that you are using a UR CB2 robot. This
-could certainly be made better by generalizing to other platforms.
+"""A function to track a grid and display its origin on the screen
 """
 
 # The MIT License (MIT)
@@ -15,8 +12,8 @@ could certainly be made better by generalizing to other platforms.
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -42,18 +39,18 @@ class GridLocation(object):
         space: A float describing the spacing of the grid in mm
         rows: An int describing the number of rows of interior corners on the
             grid being tracked.
-        cols: An int describing the number of columns of interior corners on the
-            grid being tracked.
+        cols: An int describing the number of columns of interior corners on
+            the grid being tracked.
         opencv_windows_open: A boolean, whether the openCV display windows are
             open
         image: numpy.ndarray of the undistorted image
         result_image: numpy.ndarray of the final image, which is undistorted,
             has grid corners drawn on it, and has the grid coordinates drawn on
             it.
-        object_point: numpy.ndarray of the real world coordinates of the grid in
-            the grid's own coordinate system.
-        axis: numpy.ndarry of the axis line points to draw, relative to the grid
-            origin in the grid's coordinate system.
+        object_point: numpy.ndarray of the real world coordinates of the grid
+            in the grid's own coordinate system.
+        axis: numpy.ndarry of the axis line points to draw, relative to the
+            grid origin in the grid's coordinate system.
         intrinsic: A numpy array of the camera intrinsic matrix
         distortion: A numpy array of the camera distortion parameters
     """
@@ -67,8 +64,8 @@ class GridLocation(object):
         Args:
             calibration (str): String of the file location of the camera .
                 calibration data. The data should be stored as a JSON file with
-                top level fields `intrinsic` which holds the intrinsic matrix as
-                a list of lists and `distortion` which holds the distortion
+                top level fields `intrinsic` which holds the intrinsic matrix
+                as a list of lists and `distortion` which holds the distortion
                 matrix as a list
             rows (int): The number of rows of interior corners on the grid
             cols (int): The number of columns of interior corners on the grid
@@ -93,8 +90,8 @@ class GridLocation(object):
         # Grid Info:
         self.object_point = np.zeros((self.cols * self.rows, 3), np.float32)
         self.object_point[:, :2] = (np.mgrid[
-                                   0:(self.rows*self.space):self.space,
-                                   0:(self.cols*self.space):self.space]
+                                    0:(self.rows*self.space):self.space,
+                                    0:(self.cols*self.space):self.space]
                                     .T.reshape(-1, 2))
         self.axis = np.float32([[3*self.space, 0, 0], [0, 3*self.space, 0],
                                 [0, 0, -3*self.space]]).reshape(-1, 3)
@@ -107,7 +104,7 @@ class GridLocation(object):
 
         # Camera
         self.cam = camera.Camera(cam_name, self.intrinsic, self.distortion)
-        print "done with init"
+        print("done with init")
 
     def __del__(self):
         """Destroy this instance of the GridLocation class
@@ -197,7 +194,7 @@ class GridLocation(object):
         self.__del__()
 
 
-def draw_axes(image_raw, corners, image_points):
+def draw_axes(image_raw, corners, image_points, label=''):
     """Draw axes on an image
 
     Draw axes which will be centered at the first corner and oriented by the
@@ -206,10 +203,11 @@ def draw_axes(image_raw, corners, image_points):
 
     Args:
         image_raw (numpy.ndarray): The image on which to draw the axes
-        corners (numpy.ndarray): An array of 2D points on the image in which the
-            first point is the origin of the axes to draw
+        corners (numpy.ndarray): An array of 2D points on the image in which
+            the first point is the origin of the axes to draw
         image_points (np.array): 2D points on the image at the end of the three
             axes
+        label (str): A string label to place near the coordinate frame
 
     Returns: numpy.ndarray Image with the axes drawn on it.
 
@@ -219,36 +217,49 @@ def draw_axes(image_raw, corners, image_points):
     corner = tuple(corners[0].ravel())
     image = image_raw.copy()
     temp = cv2.arrowedLine(image, corner, tuple(image_points[0].ravel()),
-                    (255, 0, 0), 5)
+                           (255, 0, 0), 5)
     if temp is not None:
         image = temp
+
     letters = np.array(image_points)
     letter_space = 30
+
     for row in range(letters.shape[0]):
         if letters[row][0][0] < corner[0]:
-            letters[row][0][0]-=letter_space
+            letters[row][0][0] -= letter_space
         if letters[row][0][1] < corner[1]:
-            letters[row][0][1]-=letter_space
+            letters[row][0][1] -= letter_space
         else:
             letters[row][0][1] += 1.5*letter_space
-    temp = cv2.putText(image,"x",tuple(letters[0].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 4)
+
+    temp = cv2.putText(image, "x", tuple(letters[0].ravel()),
+                       cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 4)
     if temp is not None:
         image = temp
 
     temp = cv2.arrowedLine(image, corner, tuple(image_points[1].ravel()),
-                    (0, 255, 0), 5)
+                           (0, 255, 0), 5)
     if temp is not None:
         image = temp
-    temp = cv2.putText(image,"y",tuple(letters[1].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
+
+    temp = cv2.putText(image, "y", tuple(letters[1].ravel()),
+                       cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 4)
     if temp is not None:
         image = temp
 
     temp = cv2.arrowedLine(image, corner, tuple(image_points[2].ravel()),
-                    (0, 0, 255), 5)
-    if temp is not None:
-        image = temp
-    temp = cv2.putText(image,"z",tuple(letters[2].ravel()), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
+                           (0, 0, 255), 5)
     if temp is not None:
         image = temp
 
+    temp = cv2.putText(image, "z", tuple(letters[2].ravel()),
+                       cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
+    if temp is not None:
+        image = temp
+
+    # put below the axes in the middle:
+    temp = cv2.putText(image, label, corner,
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    if temp is not None:
+        image = temp
     return image

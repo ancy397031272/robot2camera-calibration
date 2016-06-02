@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+robot2cam-record-ur --samples cb2points.json --address 192.168.1.100 --calibration calibration.json -s 25.4 -c 8 -r 7
+robot2cam-images-ur --samples cb2points.json --address 192.168.1.100
+robot2cam-compute
+robot2cam-check --image_folder result
