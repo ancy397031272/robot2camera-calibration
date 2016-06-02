@@ -10,10 +10,12 @@ Tracking <https://github.com/CognitiveRobotics/Peugeot/tree/TRL5>`__ and
 our `KUKA-RSI <https://github.gatech.edu/msobrepera3/KUKA-RSI>`__
 interface.
 
-You will need to setup your KUKA to talk to the KUKA-RSI interface. Then
-load a program with a series of diversified points onto the KUKA (like
-those in the tp\_files directory) which talks over the RSI interface and
-stops for a few seconds at each point.
+You will need to setup your KUKA to talk to the KUKA-RSI interface.
+Example KRL code for this can be found in 
+examples/KUKA_with_EBT/gather_data/tp_files Then load a program with a 
+series of diversified points onto the KUKA (like those in the tp\_files 
+directory) which talks over the RSI interface and stops for a few seconds 
+at each point.
 
 You then need to setup EBT to track your object with the network
 interface on.
