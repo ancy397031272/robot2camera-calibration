@@ -1,6 +1,10 @@
 robot2camera-calibration
 ========================
 
+.. image:: https://readthedocs.org/projects/robot2camera-calibration/badge/?version=latest
+   :target: http://robot2camera-calibration.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 This library was designed to help us calibrate cameras to robots and to
 calibrate difficult end of arm objects (like say a car door, which isn't
 really a tool) to the robot flange. It uses error minimization to
