@@ -1,1 +1,0 @@
-# robot2camera-calibration
