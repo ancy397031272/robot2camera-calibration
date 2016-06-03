@@ -17,9 +17,12 @@ using ``cb2-record``. This will generate a series of points such as
 ``cb2points.json``.
 
 You then need to run the ur through the points and capture data. This is
-done using the ``robot2cam-record-ur`` script. If you would like to have
-images to use for validation, those can be gathered using the
-``robot2cam-images-ur`` command. You will then need to use
+done using the ``robot2cam-record-ur`` script.
+
+.. note:: We have seen problems with pyflycapture2 when using a virtual environment
+
+If you would like to have images to use for validation, those can be gathered 
+using the ``robot2cam-images-ur`` command. You will then need to use
 ``robot2cam-compute`` to calculate the transformations. Finally, you can
 optionally use ``robot2cam-check`` to visualize the results. All of this
 is packages into ``calibrate_ur``.

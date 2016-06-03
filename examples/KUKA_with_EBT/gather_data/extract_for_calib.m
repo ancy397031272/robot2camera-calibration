@@ -72,9 +72,9 @@ robot = convert_kuka_points3(final_values(:,22:27));
 json_struct = struct('tcp2robot',robot,'camera2grid',ebt,'time',datestr(datetime('now')));
 
 currPath = fileparts(mfilename('fullpath'));
-addpath([currPath '/jsonlab']);
+addpath([currPath '/jsonlab/jsonlab']);
 savejson('',json_struct,out);
-rmpath([currPath '/jsonlab']);
+rmpath([currPath '/jsonlab/jsonlab']);
 
 %% Make Finding no motion graph
 figure
