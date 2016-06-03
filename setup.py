@@ -11,7 +11,7 @@ def license():
 
 setup(name='robot2cam_calibration',
       version='0.1',
-      description='A package to calibrate a UR CB2 Robot to a camera',
+      description='A package to calibrate a robot arm to a camera',
       long_description=readme(),
       classifiers=[
         'Development Status :: 3 - Alpha',
@@ -22,8 +22,8 @@ setup(name='robot2cam_calibration',
         'Natural Language :: English',
         'Operating System :: OS Independent'
       ],
-      keywords='universal robots cb2 ur5 flycapture2 point grey',
-      url='-',
+      keywords='universal robots cb2 ur5 flycapture2 point grey kuka',
+      url='https://github.com/IRIM-Technology-Transition-Lab/robot2camera-calibration',
       author='Michael Sobrepera',
       author_email='mjsobrep@live.com',
       license=license(),
